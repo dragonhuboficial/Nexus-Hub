@@ -3,19 +3,13 @@ task.wait(1)
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
+
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
-if PlayerGui:FindFirstChild("NexusCoreUI") then
-    PlayerGui.NexusCoreUI:Destroy()
+if PlayerGui:FindFirstChild("NexusUI") then
+	PlayerGui.NexusUI:Destroy()
 end
-
-local State = {
-    Active = false,
-    AutoScroll = true,
-    Minimized = false,
-    Logs = {}
-}
 
 -- [ MOTOR DE DESCRIPTOGRAFIA ]
 local Decryption = {}
@@ -43,131 +37,148 @@ function Decryption.decrypt(str)
     return str, nil
 end
 
-local UI = {}
-
-local gui = Instance.new("ScreenGui")
-gui.Name = "NexusCoreUI"
+local gui = Instance.new("ScreenGui", PlayerGui)
+gui.Name = "NexusUI"
 gui.ResetOnSpawn = false
-gui.Parent = PlayerGui
 
+-- MAIN
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 760, 0, 480)
-main.Position = UDim2.new(0.5, -380, 0.5, -240)
-main.BackgroundColor3 = Color3.fromRGB(16,16,20)
+main.Size = UDim2.new(0, 720, 0, 420)
+main.Position = UDim2.new(0.5, -360, 0.5, -210)
+main.BackgroundColor3 = Color3.fromRGB(18,18,26)
 main.BorderSizePixel = 0
-Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
+-- HEADER
 local header = Instance.new("Frame", main)
-header.Size = UDim2.new(1,0,0,48)
-header.BackgroundColor3 = Color3.fromRGB(22,22,28)
+header.Size = UDim2.new(1,0,0,44)
+header.BackgroundColor3 = Color3.fromRGB(30,30,48)
 header.BorderSizePixel = 0
-Instance.new("UICorner", header).CornerRadius = UDim.new(0,12)
+Instance.new("UICorner", header).CornerRadius = UDim.new(0,16)
 
 local title = Instance.new("TextLabel", header)
-title.Size = UDim2.new(1,0,1,0)
+title.Size = UDim2.new(1,-200,1,0)
+title.Position = UDim2.new(0,16,0,0)
 title.BackgroundTransparency = 1
-title.TextXAlignment = Enum.TextXAlignment.Left
-title.Text = "  NEXUS CORE"
+title.Text = "NEXUS • TOTAL CAPTURE SYSTEM"
 title.Font = Enum.Font.GothamBold
-title.TextSize = 15
-title.TextColor3 = Color3.fromRGB(200,220,255)
+title.TextSize = 14
+title.TextColor3 = Color3.fromRGB(230,230,255)
+title.TextXAlignment = Enum.TextXAlignment.Left
 
-local function headerButton(text, offset)
-    local b = Instance.new("TextButton", header)
-    b.Size = UDim2.new(0,32,0,32)
-    b.Position = UDim2.new(1,-offset,0.5,-16)
-    b.Text = text
-    b.Font = Enum.Font.GothamBold
-    b.TextSize = 13
-    b.TextColor3 = Color3.new(1,1,1)
-    b.BackgroundColor3 = Color3.fromRGB(50,50,60)
-    Instance.new("UICorner", b).CornerRadius = UDim.new(0,6)
-    return b
+-- TOP BUTTONS
+local function topButton(txt, x)
+	local b = Instance.new("TextButton", header)
+	b.Size = UDim2.new(0,80,0,26)
+	b.Position = UDim2.new(1, x, 0.5, -13)
+	b.Text = txt
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 11
+	b.TextColor3 = Color3.fromRGB(220,220,240)
+	b.BackgroundColor3 = Color3.fromRGB(60,60,90)
+	b.BorderSizePixel = 0
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+	return b
 end
 
-local btnClose = headerButton("X", 40)
-local btnMin = headerButton("-", 80)
+local btnPause = topButton("PAUSE", -260)
+local btnClear = topButton("CLEAR", -170)
+local btnCopy  = topButton("COPY",  -80)
 
-btnClose.MouseButton1Click:Connect(function()
-    gui:Destroy()
+-- SIDEBAR
+local sidebar = Instance.new("Frame", main)
+sidebar.Size = UDim2.new(0,150,1,-44)
+sidebar.Position = UDim2.new(0,0,0,44)
+sidebar.BackgroundColor3 = Color3.fromRGB(22,22,36)
+sidebar.BorderSizePixel = 0
+
+local function sideButton(txt, y)
+	local b = Instance.new("TextButton", sidebar)
+	b.Size = UDim2.new(1,-16,0,34)
+	b.Position = UDim2.new(0,8,0,y)
+	b.Text = txt
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 12
+	b.TextColor3 = Color3.fromRGB(220,220,240)
+	b.BackgroundColor3 = Color3.fromRGB(40,40,60)
+	b.BorderSizePixel = 0
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
+	return b
+end
+
+sideButton("ALL", 12)
+sideButton("REMOTES", 52)
+sideButton("OBJECTS", 92)
+sideButton("MODULES", 132)
+sideButton("FOLDERS", 172)
+sideButton("EXPORT", 212)
+
+-- CONTENT
+local content = Instance.new("Frame", main)
+content.Size = UDim2.new(1,-150,1,-100)
+content.Position = UDim2.new(0,150,0,44)
+content.BackgroundColor3 = Color3.fromRGB(14,14,22)
+content.BorderSizePixel = 0
+
+local scroll = Instance.new("ScrollingFrame", content)
+scroll.Size = UDim2.new(1,-10,1,-10)
+scroll.Position = UDim2.new(0,5,0,5)
+scroll.CanvasSize = UDim2.new(0,0,0,0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.ScrollBarImageTransparency = 0.6
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,6)
+
+-- BOTTOM BAR
+local bottom = Instance.new("Frame", main)
+bottom.Size = UDim2.new(1,0,0,56)
+bottom.Position = UDim2.new(0,0,1,-56)
+bottom.BackgroundColor3 = Color3.fromRGB(26,26,40)
+bottom.BorderSizePixel = 0
+
+local start = Instance.new("TextButton", bottom)
+start.Size = UDim2.new(0,220,0,36)
+start.Position = UDim2.new(0.5,-110,0.5,-18)
+start.Text = "START CAPTURE"
+start.Font = Enum.Font.GothamBold
+start.TextSize = 13
+start.TextColor3 = Color3.new(1,1,1)
+start.BackgroundColor3 = Color3.fromRGB(0,170,130)
+start.BorderSizePixel = 0
+Instance.new("UICorner", start).CornerRadius = UDim.new(0,12)
+
+-- API VISUAL
+_G.NexusUI = {}
+local active = false
+
+start.MouseButton1Click:Connect(function()
+	active = not active
+	start.Text = active and "STOP" or "START CAPTURE"
+	start.BackgroundColor3 = active and Color3.fromRGB(200,70,70) or Color3.fromRGB(0,170,130)
 end)
 
-btnMin.MouseButton1Click:Connect(function()
-    State.Minimized = not State.Minimized
-    main.Size = State.Minimized and UDim2.new(0,760,0,48) or UDim2.new(0,760,0,480)
-end)
-
-local body = Instance.new("Frame", main)
-body.Position = UDim2.new(0,0,0,48)
-body.Size = UDim2.new(1,0,1,-48)
-body.BackgroundTransparency = 1
-
-local actionPanel = Instance.new("Frame", body)
-actionPanel.Size = UDim2.new(1,0,0,70)
-actionPanel.BackgroundTransparency = 1
-
-local masterButton = Instance.new("TextButton", actionPanel)
-masterButton.Size = UDim2.new(0,260,0,46)
-masterButton.Position = UDim2.new(0.5,-130,0.5,-23)
-masterButton.Text = "ACTIVATE CORE"
-masterButton.Font = Enum.Font.GothamBold
-masterButton.TextSize = 15
-masterButton.TextColor3 = Color3.new(1,1,1)
-masterButton.BackgroundColor3 = Color3.fromRGB(0,160,120)
-Instance.new("UICorner", masterButton).CornerRadius = UDim.new(0,10)
-
-masterButton.MouseButton1Click:Connect(function()
-    State.Active = not State.Active
-    masterButton.Text = State.Active and "CORE ACTIVE" or "ACTIVATE CORE"
-    masterButton.BackgroundColor3 = State.Active
-        and Color3.fromRGB(200,70,70)
-        or Color3.fromRGB(0,160,120)
-end)
-
-local logsFrame = Instance.new("ScrollingFrame", body)
-logsFrame.Position = UDim2.new(0,0,0,70)
-logsFrame.Size = UDim2.new(1,0,1,-70)
-logsFrame.CanvasSize = UDim2.new(0,0,0,0)
-logsFrame.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y
-logsFrame.ScrollBarThickness = 3
-logsFrame.BackgroundTransparency = 1
-
-local layout = Instance.new("UIListLayout", logsFrame)
-layout.Padding = UDim.new(0,10)
-
-function UI.addLog(titleText, contentText)
-    local card = Instance.new("Frame", logsFrame)
-    card.Size = UDim2.new(1,-12,0,110)
-    card.BackgroundColor3 = Color3.fromRGB(26,26,32)
-    card.BorderSizePixel = 0
-    Instance.new("UICorner", card).CornerRadius = UDim.new(0,10)
-
-    local title = Instance.new("TextLabel", card)
-    title.Size = UDim2.new(1,-16,0,22)
-    title.Position = UDim2.new(0,8,0,8)
-    title.BackgroundTransparency = 1
-    title.TextXAlignment = Enum.TextXAlignment.Left
-    title.Text = titleText
-    title.Font = Enum.Font.GothamBold
-    title.TextSize = 12
-    title.TextColor3 = Color3.fromRGB(180,200,255)
-
-    local bodyTxt = Instance.new("TextLabel", card)
-    bodyTxt.Size = UDim2.new(1,-16,0,60)
-    bodyTxt.Position = UDim2.new(0,8,0,34)
-    bodyTxt.BackgroundTransparency = 1
-    bodyTxt.TextWrapped = true
-    bodyTxt.TextYAlignment = Enum.TextYAlignment.Top
-    bodyTxt.TextXAlignment = Enum.TextXAlignment.Left
-    bodyTxt.Font = Enum.Font.Code
-    bodyTxt.TextSize = 11
-    bodyTxt.TextColor3 = Color3.new(1,1,1)
-    bodyTxt.Text = contentText
-    bodyTxt.RichText = true
-
-    if State.AutoScroll then
-        logsFrame.CanvasPosition = Vector2.new(0,999999)
+btnClear.MouseButton1Click:Connect(function()
+    for _, v in pairs(scroll:GetChildren()) do
+        if v:IsA("TextLabel") then v:Destroy() end
     end
+end)
+
+function _G.NexusUI:AddItem(text)
+	local item = Instance.new("TextLabel", scroll)
+	item.Size = UDim2.new(1,-8,0,32)
+	item.BackgroundColor3 = Color3.fromRGB(30,30,46)
+	item.Text = " "..text
+	item.TextColor3 = Color3.fromRGB(210,210,235)
+	item.Font = Enum.Font.Code
+	item.TextSize = 11
+	item.TextXAlignment = Enum.TextXAlignment.Left
+	item.BorderSizePixel = 0
+    item.RichText = true
+	Instance.new("UICorner", item).CornerRadius = UDim.new(0,8)
+    scroll.CanvasPosition = Vector2.new(0, 999999)
 end
 
 -- [ DRAGGING ]
@@ -192,7 +203,7 @@ local oldNamecall = mt.__namecall
 setreadonly(mt, false)
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
-    if State.Active and (method == "FireServer" or method == "InvokeServer") then
+    if active and (method == "FireServer" or method == "InvokeServer") then
         local args = {...}
         task.spawn(function()
             local argStr = ""
@@ -201,11 +212,11 @@ mt.__namecall = newcclosure(function(self, ...)
                 local dec, tag = Decryption.decrypt(val)
                 argStr = argStr .. string.format("[%d]: %s %s ", i, dec, tag and "<font color='#00FF00'>("..tag..")</font>" or "")
             end
-            UI.addLog(self.Name .. " (" .. method .. ")", argStr)
+            _G.NexusUI:AddItem(string.format("<b>%s</b> | %s", self.Name, argStr))
         end)
     end
     return oldNamecall(self, ...)
 end)
 setreadonly(mt, true)
 
-UI.addLog("SYSTEM", "Nexus Core interface loaded successfully")
+_G.NexusUI:AddItem("SYSTEM | Nexus Total Capture loaded successfully")
