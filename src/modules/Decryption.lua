@@ -2,14 +2,9 @@ local HttpService = game:GetService("HttpService")
 
 local Decryption = {}
 
--- [ UTILITÁRIOS DE STRING ]
-function Decryption.reverseString(str)
-    return string.reverse(str)
-end
-
+-- [ UTILITÁRIOS ]
 function Decryption.isReadable(str)
     if type(str) ~= "string" or #str < 2 then return false end
-    -- Verifica se contém caracteres comuns de texto e não apenas lixo binário
     local readableChars = 0
     for i = 1, #str do
         local c = str:byte(i)
@@ -17,7 +12,7 @@ function Decryption.isReadable(str)
             readableChars = readableChars + 1
         end
     end
-    return (readableChars / #str) > 0.8
+    return (readableChars / #str) > 0.75
 end
 
 function Decryption.safeString(v, depth)
@@ -29,17 +24,19 @@ function Decryption.safeString(v, depth)
         local count = 0
         for k, val in pairs(v) do
             count = count + 1
-            if count > 10 then s = s .. "...," break end
+            if count > 8 then s = s .. "...," break end
             s = s .. tostring(k) .. ":" .. Decryption.safeString(val, depth + 1) .. ","
         end
         return (count > 0 and s:sub(1, #s-1) or s) .. "}"
     elseif t == "Instance" then
         return v.ClassName .. ":" .. v.Name
+    elseif t == "string" then
+        return #v > 100 and v:sub(1, 97) .. "..." or v
     end
     return tostring(v)
 end
 
--- [ ALGORITMOS ]
+-- [ ALGORITMOS DE ELITE ]
 local Algorithms = {
     Base64 = function(str)
         local s, b = pcall(HttpService.Base64Decode, HttpService, str)
@@ -51,22 +48,11 @@ local Algorithms = {
     end,
     Reverse = function(str)
         local rev = string.reverse(str)
-        return rev ~= str and rev or nil, "REV"
+        return (rev ~= str and Decryption.isReadable(rev)) and rev or nil, "REV"
     end,
-    ROT13 = function(str)
-        return str:gsub(".", function(c)
-            local b = c:byte()
-            if (b >= 65 and b <= 90) then
-                return string.char((b - 65 + 13) % 26 + 65)
-            elseif (b >= 97 and b <= 122) then
-                return string.char((b - 97 + 13) % 26 + 97)
-            else
-                return c
-            end
-        end), "ROT13"
-    end,
-    XOR_Common = function(str)
-        local keys = {"key", "auth", "secret", "nexus", "delta"}
+    XOR_Brute = function(str)
+        -- Tenta chaves comuns e chaves baseadas no tamanho da string
+        local keys = {"key", "auth", "secret", "nexus", "delta", "roblox", "encrypt"}
         for _, k in pairs(keys) do
             local res = ""
             for i = 1, #str do
@@ -74,29 +60,44 @@ local Algorithms = {
             end
             if Decryption.isReadable(res) then return res, "XOR-"..k end
         end
+        
+        -- Brute-force de 1 byte (muito comum em jogos simples)
+        for i = 1, 255 do
+            local res = ""
+            for j = 1, #str do
+                res = res .. string.char(bit.bxor(str:byte(j), i))
+            end
+            if Decryption.isReadable(res) and #res > 4 then
+                return res, "XOR-1B("..i..")"
+            end
+        end
+        return nil
+    end,
+    ByteShift = function(str)
+        -- Tenta deslocamento de bytes simples
+        local res = ""
+        for i = 1, #str do
+            res = res .. string.char((str:byte(i) - 1) % 256)
+        end
+        if Decryption.isReadable(res) then return res, "SHIFT-1" end
         return nil
     end
 }
 
--- [ MOTOR RECURSIVO ]
+-- [ MOTOR DE NORMALIZAÇÃO ]
 function Decryption.decrypt(str, depth)
     depth = depth or 0
-    if depth > 3 or type(str) ~= "string" or #str < 2 then return str, nil end
+    if depth > 4 or type(str) ~= "string" or #str < 2 then return str, nil end
     
-    local bestResult = str
-    local methodsUsed = {}
-
     for name, algo in pairs(Algorithms) do
         local res, tag = algo(str)
         if res and res ~= str then
-            -- Se o resultado for legível ou uma tabela/JSON, tentamos recursão
-            if Decryption.isReadable(res) or res:sub(1,1) == "{" then
-                local deeperRes, deeperTags = Decryption.decrypt(res, depth + 1)
-                if deeperRes ~= res then
-                    return deeperRes, tag .. "->" .. (deeperTags or "")
-                end
-                return res, tag
+            -- Recursão para quebrar múltiplas camadas
+            local deeperRes, deeperTags = Decryption.decrypt(res, depth + 1)
+            if deeperRes ~= res then
+                return deeperRes, tag .. "+" .. (deeperTags or "")
             end
+            return res, tag
         end
     end
     
