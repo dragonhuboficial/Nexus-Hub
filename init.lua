@@ -1,3 +1,4 @@
+-- NEXUS HUB - VELOCITY (ULTRA STABLE)
 task.wait(1)
 
 local Players = game:GetService("Players")
@@ -5,68 +6,70 @@ local UserInputService = game:GetService("UserInputService")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
+-- Remover GUI antiga
 if PlayerGui:FindFirstChild("NexusHubUI") then
     PlayerGui.NexusHubUI:Destroy()
 end
 
+-- Criar ScreenGui
 local gui = Instance.new("ScreenGui")
 gui.Name = "NexusHubUI"
 gui.ResetOnSpawn = false
 gui.Parent = PlayerGui
 
+-- Frame Principal
 local main = Instance.new("Frame")
+main.Name = "MainFrame"
 main.Parent = gui
-main.Size = UDim2.new(0, 400, 0, 260)
-main.Position = UDim2.new(0.5, -200, 0.5, -130)
-main.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-main.BorderSizePixel = 0
+main.Size = UDim2.new(0, 350, 0, 200)
+main.Position = UDim2.new(0.5, -175, 0.5, -100)
+main.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+main.BorderSizePixel = 2
+main.BorderColor3 = Color3.fromRGB(0, 170, 255)
 
+-- Titulo
 local title = Instance.new("TextLabel")
 title.Parent = main
-title.Size = UDim2.new(1, 0, 0, 35)
-title.BackgroundColor3 = Color3.fromRGB(55, 55, 70)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 title.Text = "NEXUS HUB - VELOCITY"
 title.TextColor3 = Color3.new(1,1,1)
-title.Font = Enum.Font.GothamBold
-title.TextSize = 14
+title.Font = Enum.Font.SourceSansBold
+title.TextSize = 16
 
+-- Botao Fechar
 local close = Instance.new("TextButton")
 close.Parent = title
-close.Size = UDim2.new(0, 30, 0, 25)
-close.Position = UDim2.new(1, -35, 0.5, -12)
+close.Size = UDim2.new(0, 30, 0, 30)
+close.Position = UDim2.new(1, -30, 0, 0)
 close.Text = "X"
-close.Font = Enum.Font.GothamBold
+close.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
 close.TextColor3 = Color3.new(1,1,1)
-close.BackgroundColor3 = Color3.fromRGB(180, 60, 60)
-
 close.MouseButton1Click:Connect(function()
     gui:Destroy()
 end)
 
+-- Botao START/STOP
 local toggle = Instance.new("TextButton")
 toggle.Parent = main
-toggle.Size = UDim2.new(0, 180, 0, 40)
-toggle.Position = UDim2.new(0.5, -90, 0.5, -20)
+toggle.Size = UDim2.new(0, 150, 0, 40)
+toggle.Position = UDim2.new(0.5, -75, 0.5, -10)
 toggle.Text = "START"
-toggle.Font = Enum.Font.GothamBold
-toggle.TextSize = 14
+toggle.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
 toggle.TextColor3 = Color3.new(1,1,1)
-toggle.BackgroundColor3 = Color3.fromRGB(0, 170, 120)
+toggle.Font = Enum.Font.SourceSansBold
 
 _G.NexusActive = false
 
 toggle.MouseButton1Click:Connect(function()
     _G.NexusActive = not _G.NexusActive
     toggle.Text = _G.NexusActive and "STOP" or "START"
-    toggle.BackgroundColor3 = _G.NexusActive
-        and Color3.fromRGB(200, 60, 60)
-        or Color3.fromRGB(0, 170, 120)
+    toggle.BackgroundColor3 = _G.NexusActive and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(0, 150, 0)
 end)
 
+-- Drag Manual
 local dragging = false
-local dragStart
-local startPos
-
+local dragStart, startPos
 main.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true
@@ -74,43 +77,27 @@ main.InputBegan:Connect(function(input)
         startPos = main.Position
     end
 end)
-
 main.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
     end
 end)
-
 UserInputService.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
-        main.Position = UDim2.new(
-            startPos.X.Scale,
-            startPos.X.Offset + delta.X,
-            startPos.Y.Scale,
-            startPos.Y.Offset + delta.Y
-        )
+        main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
 
--- [ LOGICA DE CAPTURA INTEGRADA ]
-local function addLog(remote, method, args)
-    -- Como a interface original não tem lista de logs, vamos imprimir no console (F9)
-    -- e você pode adicionar uma lista depois se quiser
-    local argStr = ""
-    for i, v in pairs(args) do argStr = argStr .. tostring(v) .. ", " end
-    print(string.format("[NEXUS CAPTURE] %s (%s) | Args: %s", remote.Name, method, argStr))
-end
-
+-- Captura de Remotes (Simples)
 local mt = getrawmetatable(game)
-local oldNamecall = mt.__namecall
+local old = mt.__namecall
 setreadonly(mt, false)
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
     if _G.NexusActive and (method == "FireServer" or method == "InvokeServer") then
-        local args = {...}
-        task.spawn(function() addLog(self, method, args) end)
+        print("[NEXUS] Remote: " .. self.Name .. " | Method: " .. method)
     end
-    return oldNamecall(self, ...)
+    return old(self, ...)
 end)
 setreadonly(mt, true)
