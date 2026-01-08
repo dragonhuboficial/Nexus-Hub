@@ -1,6 +1,6 @@
 --[[
-    NEXUS CORE v8.2 | REORGANIZED & POWERFUL
-    Menu Superior + Captura Brutal + Correção de Logs
+    NEXUS CORE v8.3 | FINAL VISION
+    Menu Superior + Captura Corrigida + Sem RichText Bug
 ]]
 
 task.wait(0.5)
@@ -47,7 +47,7 @@ end
 
 -- [ INTERFACE ]
 local gui = Instance.new("ScreenGui", PlayerGui)
-gui.Name = "NexusUI_v82"
+gui.Name = "NexusUI_v83"
 gui.ResetOnSpawn = false
 
 local main = Instance.new("Frame", gui)
@@ -64,20 +64,20 @@ header.BorderSizePixel = 0
 Instance.new("UICorner", header).CornerRadius = UDim.new(0,12)
 
 local title = Instance.new("TextLabel", header)
-title.Size = UDim2.new(0, 200, 1, 0)
+title.Size = UDim2.new(0, 180, 1, 0)
 title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "NEXUS CORE v8.2"
+title.Text = "NEXUS CORE v8.3"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 14
 title.TextColor3 = Color3.fromRGB(230,230,255)
 title.TextXAlignment = Enum.TextXAlignment.Left
 
--- [ MENU DROPDOWN SUPERIOR ]
+-- [ MENU SUPERIOR ]
 local menuBtn = Instance.new("TextButton", header)
 menuBtn.Size = UDim2.new(0, 100, 0, 26)
 menuBtn.Position = UDim2.new(0, 180, 0.5, -13)
-menuBtn.Text = "CATEGORY: ALL"
+menuBtn.Text = "ALL"
 menuBtn.Font = Enum.Font.GothamBold
 menuBtn.TextSize = 10
 menuBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
@@ -104,7 +104,7 @@ local function addMenuOption(txt, y, cat)
     Instance.new("UICorner", b)
     b.MouseButton1Click:Connect(function()
         Nexus.Category = cat
-        menuBtn.Text = "CATEGORY: " .. cat
+        menuBtn.Text = cat
         menuFrame.Visible = false
     end)
 end
@@ -117,7 +117,7 @@ addMenuOption("FOLDERS", 125, "FOLDERS")
 
 menuBtn.MouseButton1Click:Connect(function() menuFrame.Visible = not menuFrame.Visible end)
 
--- [ BOTÕES DE AÇÃO NO HEADER ]
+-- [ BOTÕES DE AÇÃO ]
 local function topBtn(txt, x, color)
     local b = Instance.new("TextButton", header)
     b.Size = UDim2.new(0, 60, 0, 26)
@@ -137,7 +137,7 @@ local btnClear = topBtn("CLEAR", -165)
 
 btnClose.MouseButton1Click:Connect(function() gui:Destroy() end)
 
--- [ ÁREA DE CONTEÚDO ]
+-- [ CONTEÚDO ]
 local content = Instance.new("Frame", main)
 content.Size = UDim2.new(1, -20, 1, -110)
 content.Position = UDim2.new(0, 10, 0, 50)
@@ -187,7 +187,7 @@ btnCopyAll.MouseButton1Click:Connect(function()
     btnCopyAll.Text = "COPY"
 end)
 
--- [ FUNÇÃO DE LOG ]
+-- [ FUNÇÃO DE LOG CORRIGIDA ]
 local function addLog(titleText, contentText, category)
     if Nexus.Category ~= "ALL" and Nexus.Category ~= category then return end
 
@@ -200,14 +200,14 @@ local function addLog(titleText, contentText, category)
     box.Size = UDim2.new(1, -70, 1, 0)
     box.Position = UDim2.new(0, 10, 0, 0)
     box.BackgroundTransparency = 1
-    box.Text = "<b>[" .. category .. "] " .. titleText .. "</b> | " .. contentText
-    box.TextColor3 = Color3.fromRGB(210, 210, 235)
+    box.Text = "[" .. category .. "] " .. titleText .. " | " .. contentText
+    box.TextColor3 = Color3.fromRGB(255, 255, 255)
     box.Font = Enum.Font.Code
     box.TextSize = 10
     box.TextXAlignment = Enum.TextXAlignment.Left
     box.ReadOnly = true
     box.ClearTextOnFocus = false
-    box.RichText = true
+    box.RichText = false -- DESATIVADO PARA EVITAR BUG
 
     local copyBtn = Instance.new("TextButton", logFrame)
     copyBtn.Size = UDim2.new(0, 50, 0, 25)
@@ -282,4 +282,4 @@ mt.__namecall = newcclosure(function(self, ...)
 end)
 
 setreadonly(mt, true)
-addLog("SYSTEM", "Nexus Core v8.2 Loaded Successfully", "ALL")
+addLog("SYSTEM", "Nexus Core v8.3 Loaded Successfully", "ALL")
