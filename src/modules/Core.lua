@@ -1,46 +1,51 @@
 local Core = {}
 
--- [ UTILITÁRIOS DE INSPEÇÃO ]
-local function getFunctionUpvalues(f)
+-- [ UTILITÁRIOS DE INSPEÇÃO PROFUNDA ]
+local function getConstants(f)
+    if not debug or not debug.getconstants then return {} end
+    local constants = {}
+    pcall(function()
+        constants = debug.getconstants(f)
+    end)
+    return constants
+end
+
+local function getUpvalues(f)
     if not debug or not debug.getupvalues then return {} end
     local upvalues = {}
-    local success, res = pcall(debug.getupvalues, f)
-    if success then
-        for i, v in pairs(res) do
-            upvalues[i] = v
-        end
-    end
+    pcall(function()
+        upvalues = debug.getupvalues(f)
+    end)
     return upvalues
 end
 
 function Core.hook(Nexus, UI, Decryption)
     local mt = getrawmetatable(game)
     local oldNamecall = mt.__namecall
-    local oldIndex = mt.__index
     setreadonly(mt, false)
 
-    -- [ HOOK: NAMECALL ]
     mt.__namecall = newcclosure(function(self, ...)
         local method = getnamecallmethod()
         local args = {...}
         
         if _G.NexusActive and (method == "FireServer" or method == "InvokeServer") then
-            -- Deep Inspection: Tentar capturar o script chamador e upvalues
-            local caller = getcallingscript and getcallingscript() or "Unknown"
-            local upvalues = {}
+            local caller = getcallingscript and getcallingscript() or nil
+            local info = {}
             
-            -- Tenta inspecionar a função que chamou o remote (se possível)
             pcall(function()
-                local info = debug.getinfo(2)
-                if info and info.func then
-                    upvalues = getFunctionUpvalues(info.func)
+                local dbgInfo = debug.getinfo(2)
+                if dbgInfo and dbgInfo.func then
+                    info.Constants = getConstants(dbgInfo.func)
+                    info.Upvalues = getUpvalues(dbgInfo.func)
+                    info.Source = dbgInfo.source
+                    info.Line = dbgInfo.currentline
                 end
             end)
 
             task.spawn(function()
                 UI.addLog(Nexus, Decryption, self, method, args, {
-                    Caller = tostring(caller),
-                    Upvalues = upvalues
+                    Caller = caller and caller:GetFullName() or "Unknown",
+                    Debug = info
                 })
             end)
         end
@@ -48,15 +53,18 @@ function Core.hook(Nexus, UI, Decryption)
         return oldNamecall(self, ...)
     end)
 
-    -- [ HOOK: INDEX (Para capturar propriedades de Remotes) ]
-    mt.__index = newcclosure(function(self, key)
-        if _G.NexusActive and typeof(self) == "Instance" and (self:IsA("RemoteEvent") or self:IsA("RemoteFunction")) then
-            -- Opcional: Logar acessos a propriedades sensíveis se necessário
-        end
-        return oldIndex(self, key)
-    end)
-
     setreadonly(mt, true)
+end
+
+-- [ REMOTE BROWSER ]
+function Core.getRemotes()
+    local remotes = {}
+    for _, v in pairs(game:GetDescendants()) do
+        if v:IsA("RemoteEvent") or v:IsA("RemoteFunction") then
+            table.insert(remotes, v)
+        end
+    end
+    return remotes
 end
 
 return Core
