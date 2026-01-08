@@ -1,6 +1,6 @@
 --[[
-    NEXUS CORE v7.8 | ORIGINAL POWER
-    Interface Original + Inteligência Phantom
+    NEXUS TOTAL CAPTURE SYSTEM v7.9
+    Interface Profissional Restaurada + Inteligência Phantom
 ]]
 
 task.wait(1)
@@ -11,17 +11,18 @@ local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
-if PlayerGui:FindFirstChild("NexusUI") then
-	PlayerGui.NexusUI:Destroy()
+-- Limpeza de UIs antigas
+for _, v in pairs(PlayerGui:GetChildren()) do
+    if v.Name == "NexusUI" or v.Name == "NexusHubUI" then v:Destroy() end
 end
 
--- [ ESTADO E MÓDULOS ]
 local Nexus = {
     Active = false,
     Queue = {},
     ProcessedKeys = {}
 }
 
+-- [ MOTOR DE DESCRIPTOGRAFIA ]
 local Decryption = {}
 function Decryption.safeString(v)
     local t = typeof(v)
@@ -42,7 +43,7 @@ function Decryption.smartDecrypt(str)
     return str, nil
 end
 
--- [ INTERFACE ORIGINAL ]
+-- [ INTERFACE PROFISSIONAL ]
 local gui = Instance.new("ScreenGui", PlayerGui)
 gui.Name = "NexusUI"
 gui.ResetOnSpawn = false
@@ -64,7 +65,7 @@ local title = Instance.new("TextLabel", header)
 title.Size = UDim2.new(1,-200,1,0)
 title.Position = UDim2.new(0,16,0,0)
 title.BackgroundTransparency = 1
-title.Text = "NEXUS • TOTAL CAPTURE SYSTEM v7.8"
+title.Text = "NEXUS • TOTAL CAPTURE SYSTEM v7.9"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 14
 title.TextColor3 = Color3.fromRGB(230,230,255)
@@ -84,8 +85,8 @@ local function topButton(txt, x, color)
 	return b
 end
 
-local btnClose = topButton("CLOSE", -80, Color3.fromRGB(150, 50, 50))
-local btnClear = topButton("CLEAR", -170)
+local btnClose = topButton("CLOSE", -90, Color3.fromRGB(150, 50, 50))
+local btnClear = topButton("CLEAR", -180)
 
 btnClose.MouseButton1Click:Connect(function() gui:Destroy() end)
 
@@ -161,7 +162,7 @@ end)
 -- [ FUNÇÃO DE LOG COM BOTÃO DE CÓPIA ]
 local function addLog(titleText, contentText)
     local logFrame = Instance.new("Frame", scroll)
-    logFrame.Size = UDim2.new(1, -10, 0, 45)
+    logFrame.Size = UDim2.new(1, -10, 0, 50)
     logFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 46)
     Instance.new("UICorner", logFrame).CornerRadius = UDim.new(0, 8)
     
@@ -231,9 +232,7 @@ setreadonly(mt, false)
 
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
-    
     if method == "Kick" and self == player then return nil end
-
     if Nexus.Active and (method == "FireServer" or method == "InvokeServer") then
         local args = {...}
         local argStr = ""
@@ -242,7 +241,6 @@ mt.__namecall = newcclosure(function(self, ...)
             local dec, tag = Decryption.smartDecrypt(val)
             argStr = argStr .. dec .. (tag and " ("..tag..")" or "") .. " "
         end
-        
         local key = self.Name .. argStr
         if not Nexus.ProcessedKeys[key] then
             Nexus.ProcessedKeys[key] = true
@@ -253,4 +251,4 @@ mt.__namecall = newcclosure(function(self, ...)
 end)
 
 setreadonly(mt, true)
-addLog("SYSTEM", "Nexus Core v7.8 Loaded Successfully")
+addLog("SYSTEM", "Nexus Core v7.9 Professional UI Restored")
