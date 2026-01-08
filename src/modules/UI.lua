@@ -5,35 +5,31 @@ local HttpService = game:GetService("HttpService")
 local UI = {}
 
 function UI.init(Nexus)
-    pcall(function() CoreGui.NexusHubUI:Destroy() end)
+    -- Limpeza de segurança
+    for _, v in pairs(CoreGui:GetChildren()) do
+        if v.Name == "NexusHubUI" then v:Destroy() end
+    end
 
-    local Screen = Instance.new("ScreenGui", CoreGui)
+    local Screen = Instance.new("ScreenGui")
     Screen.Name = "NexusHubUI"
+    Screen.Parent = CoreGui
     Screen.ResetOnSpawn = false
+    Screen.IgnoreGuiInset = true
     
     local Main = Instance.new("Frame", Screen)
-    Main.Size = UDim2.new(0, 700, 0, 500)
-    Main.Position = UDim2.new(0.5, -350, 0.5, -250)
-    Main.BackgroundColor3 = Color3.fromRGB(12, 12, 18)
+    Main.Name = "Main"
+    Main.Size = UDim2.new(0, 650, 0, 450)
+    Main.Position = UDim2.new(0.5, -325, 0.5, -225)
+    Main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
     Main.BorderSizePixel = 0
+    Main.Active = true
+    Main.Draggable = true -- Fallback para executores simples
     
     local Corner = Instance.new("UICorner", Main)
     Corner.CornerRadius = UDim.new(0, 10)
     
-    -- [ BARRA LATERAL / ABAS ]
-    local Sidebar = Instance.new("Frame", Main)
-    Sidebar.Size = UDim2.new(0, 150, 1, 0)
-    Sidebar.BackgroundColor3 = Color3.fromRGB(18, 18, 25)
-    Sidebar.BorderSizePixel = 0
-    Instance.new("UICorner", Sidebar).CornerRadius = UDim.new(0, 10)
-
-    local Content = Instance.new("Frame", Main)
-    Content.Size = UDim2.new(1, -160, 1, -60)
-    Content.Position = UDim2.new(0, 155, 0, 55)
-    Content.BackgroundTransparency = 1
-
     local Title = Instance.new("TextLabel", Main)
-    Title.Size = UDim2.new(1, 0, 0, 50)
+    Title.Size = UDim2.new(1, 0, 0, 45)
     Title.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     Title.Text = "  NEXUS-HUB v7.0 APEX | ULTIMATE"
     Title.TextColor3 = Nexus.Settings.Theme
@@ -42,91 +38,61 @@ function UI.init(Nexus)
     Title.TextSize = 16
     Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 10)
 
-    -- [ SISTEMA DE ABAS ]
-    local Pages = {
-        Spy = Instance.new("ScrollingFrame", Content),
-        Browser = Instance.new("ScrollingFrame", Content),
-        Settings = Instance.new("ScrollingFrame", Content)
-    }
+    -- [ BOTÕES DE CONTROLE ]
+    local CloseBtn = Instance.new("TextButton", Title)
+    CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+    CloseBtn.Position = UDim2.new(1, -40, 0.5, -15)
+    CloseBtn.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    CloseBtn.Text = "X"
+    CloseBtn.TextColor3 = Color3.new(1,1,1)
+    CloseBtn.Font = Enum.Font.GothamBold
+    Instance.new("UICorner", CloseBtn)
+    CloseBtn.MouseButton1Click:Connect(function() Screen:Destroy() end)
 
-    for name, page in pairs(Pages) do
-        page.Size = UDim2.new(1, 0, 1, 0)
-        page.BackgroundTransparency = 1
-        page.Visible = (name == "Spy")
-        page.ScrollBarThickness = 2
-        page.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y
-        local layout = Instance.new("UIListLayout", page)
-        layout.Padding = UDim.new(0, 5)
-    end
-
-    local function createTab(name, pos)
-        local btn = Instance.new("TextButton", Sidebar)
-        btn.Size = UDim2.new(0.9, 0, 0, 40)
-        btn.Position = UDim2.new(0.05, 0, 0, pos)
-        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-        btn.Text = name:upper()
-        btn.TextColor3 = Color3.new(1,1,1)
-        btn.Font = Enum.Font.GothamSemibold
-        btn.TextSize = 12
-        Instance.new("UICorner", btn)
-        btn.MouseButton1Click:Connect(function()
-            for n, p in pairs(Pages) do p.Visible = (n == name) end
-        end)
-    end
-
-    createTab("Spy", 60)
-    createTab("Browser", 110)
-    createTab("Settings", 160)
-
-    -- [ CONTROLES ]
+    -- [ CONTEÚDO ]
+    local Container = Instance.new("ScrollingFrame", Main)
+    Container.Size = UDim2.new(0.96, 0, 0.75, 0)
+    Container.Position = UDim2.new(0.02, 0, 0.15, 0)
+    Container.BackgroundTransparency = 1
+    Container.CanvasSize = UDim2.new(0, 0, 0, 0)
+    Container.ScrollBarThickness = 2
+    Container.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y
+    
+    local ListLayout = Instance.new("UIListLayout", Container)
+    ListLayout.Padding = UDim.new(0, 8)
+    
     local Controls = Instance.new("Frame", Main)
-    Controls.Size = UDim2.new(1, -160, 0, 50)
-    Controls.Position = UDim2.new(0, 155, 1, -55)
+    Controls.Size = UDim2.new(1, 0, 0, 60)
+    Controls.Position = UDim2.new(0, 0, 0.88, 0)
     Controls.BackgroundTransparency = 1
-
+    
     local toggleBtn = Instance.new("TextButton", Controls)
-    toggleBtn.Size = UDim2.new(0, 120, 0, 35)
-    toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+    toggleBtn.Size = UDim2.new(0, 140, 0, 40)
+    toggleBtn.Position = UDim2.new(0.05, 0, 0, 0)
+    toggleBtn.BackgroundColor3 = Color3.fromRGB(0, 180, 120)
     toggleBtn.Text = "START CAPTURE"
     toggleBtn.TextColor3 = Color3.new(1,1,1)
     toggleBtn.Font = Enum.Font.GothamBold
     Instance.new("UICorner", toggleBtn)
+    
     toggleBtn.MouseButton1Click:Connect(function()
         Nexus.Active = not Nexus.Active
         _G.NexusActive = Nexus.Active
         toggleBtn.Text = Nexus.Active and "STOP CAPTURE" or "START CAPTURE"
-        toggleBtn.BackgroundColor3 = Nexus.Active and Color3.fromRGB(180, 50, 50) or Color3.fromRGB(0, 150, 100)
+        toggleBtn.BackgroundColor3 = Nexus.Active and Color3.fromRGB(220, 60, 60) or Color3.fromRGB(0, 180, 120)
     end)
 
-    -- Dragging
-    local dragging, dragInput, dragStart, startPos
-    Title.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            dragStart = input.Position
-            startPos = Main.Position
-        end
-    end)
-    UserInputService.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            local delta = input.Position - dragStart
-            Main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-        end
-    end)
-    UserInputService.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end
-    end)
-
-    UI.LogContainer = Pages.Spy
-    return Pages.Spy
+    UI.LogContainer = Container
+    print("Nexus-Hub: Interface carregada com sucesso!")
+    return Container
 end
 
 function UI.addLog(Nexus, Decryption, remote, method, args, extra)
     if not UI.LogContainer then return end
     
     local logFrame = Instance.new("Frame", UI.LogContainer)
-    logFrame.Size = UDim2.new(1, -10, 0, 110)
-    logFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    logFrame.Size = UDim2.new(1, -10, 0, 100)
+    logFrame.BackgroundColor3 = Color3.fromRGB(25, 25, 30)
     logFrame.BorderSizePixel = 0
     Instance.new("UICorner", logFrame)
     
@@ -157,11 +123,10 @@ function UI.addLog(Nexus, Decryption, remote, method, args, extra)
     for i, v in pairs(args) do
         local val = Decryption.safeString(v)
         local dec, tag = Decryption.decrypt(val)
-        argStr = argStr .. string.format("[%d]: %s %s  ", i, dec, tag and "<font color='#00FF00'>("..tag..")</font>" or "")
+        argStr = argStr .. string.format("[%d]: %s %s  ", i, dec, tag and "<font color='#00FF00'>(%s)</font>" or "")
     end
     content.Text = argStr
 
-    -- Botão Gerar Script
     local genBtn = Instance.new("TextButton", logFrame)
     genBtn.Size = UDim2.new(0, 100, 0, 25)
     genBtn.Position = UDim2.new(1, -110, 1, -30)
@@ -179,24 +144,9 @@ function UI.addLog(Nexus, Decryption, remote, method, args, extra)
         genBtn.Text = "GENERATE CODE"
     end)
 
-    -- Info de Debug (Constants/Upvalues)
-    local debugLabel = Instance.new("TextLabel", logFrame)
-    debugLabel.Size = UDim2.new(1, -120, 0, 20)
-    debugLabel.Position = UDim2.new(0, 10, 1, -25)
-    debugLabel.BackgroundTransparency = 1
-    debugLabel.TextColor3 = Color3.fromRGB(150, 150, 150)
-    debugLabel.Font = Enum.Font.Gotham
-    debugLabel.TextSize = 9
-    debugLabel.TextXAlignment = Enum.TextXAlignment.Left
-    local constCount = extra.Debug and #extra.Debug.Constants or 0
-    local upCount = extra.Debug and #extra.Debug.Upvalues or 0
-    debugLabel.Text = string.format("Constants: %d | Upvalues: %d | Line: %s", constCount, upCount, extra.Debug and extra.Debug.Line or "?")
-
     if Nexus.Settings.AutoScroll then
         UI.LogContainer.CanvasPosition = Vector2.new(0, 999999)
     end
-    
-    table.insert(Nexus.Data.Logs, {Remote = remote.Name, Method = method, Args = args, Extra = extra})
 end
 
 return UI
