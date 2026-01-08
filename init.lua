@@ -1,6 +1,6 @@
 --[[
-    NEXUS TOTAL CAPTURE SYSTEM v8.1
-    Limpeza Forçada + Interface Profissional + Cópia Geral
+    NEXUS CORE v8.2 | REORGANIZED & POWERFUL
+    Menu Superior + Captura Brutal + Correção de Logs
 ]]
 
 task.wait(0.5)
@@ -11,24 +11,17 @@ local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
--- [ LIMPEZA AGRESSIVA ]
-local function cleanup()
-    for _, v in pairs(PlayerGui:GetChildren()) do
-        if v.Name:find("Nexus") or v.Name:find("Hub") then
-            v:Destroy()
-        end
-    end
-    if game:GetService("CoreGui"):FindFirstChild("NexusUI") then
-        game:GetService("CoreGui").NexusUI:Destroy()
-    end
+-- [ LIMPEZA ]
+for _, v in pairs(PlayerGui:GetChildren()) do
+    if v.Name:find("Nexus") then v:Destroy() end
 end
-cleanup()
 
 local Nexus = {
     Active = false,
+    Category = "ALL",
     Queue = {},
     ProcessedKeys = {},
-    AllLogs = "" -- Armazena todos os logs para o COPY geral
+    AllLogs = ""
 }
 
 -- [ MOTOR DE DESCRIPTOGRAFIA ]
@@ -54,122 +47,132 @@ end
 
 -- [ INTERFACE ]
 local gui = Instance.new("ScreenGui", PlayerGui)
-gui.Name = "NexusUI_v81"
+gui.Name = "NexusUI_v82"
 gui.ResetOnSpawn = false
 
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 720, 0, 420)
-main.Position = UDim2.new(0.5, -360, 0.5, -210)
+main.Size = UDim2.new(0, 600, 0, 400)
+main.Position = UDim2.new(0.5, -300, 0.5, -200)
 main.BackgroundColor3 = Color3.fromRGB(18,18,26)
 main.BorderSizePixel = 0
-Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,12)
 
 local header = Instance.new("Frame", main)
 header.Size = UDim2.new(1,0,0,44)
 header.BackgroundColor3 = Color3.fromRGB(30,30,48)
 header.BorderSizePixel = 0
-Instance.new("UICorner", header).CornerRadius = UDim.new(0,16)
+Instance.new("UICorner", header).CornerRadius = UDim.new(0,12)
 
 local title = Instance.new("TextLabel", header)
-title.Size = UDim2.new(1,-200,1,0)
-title.Position = UDim2.new(0,16,0,0)
+title.Size = UDim2.new(0, 200, 1, 0)
+title.Position = UDim2.new(0, 15, 0, 0)
 title.BackgroundTransparency = 1
-title.Text = "NEXUS • TOTAL CAPTURE SYSTEM v8.1"
+title.Text = "NEXUS CORE v8.2"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 14
 title.TextColor3 = Color3.fromRGB(230,230,255)
 title.TextXAlignment = Enum.TextXAlignment.Left
 
-local function topButton(txt, x)
-	local b = Instance.new("TextButton", header)
-	b.Size = UDim2.new(0,80,0,26)
-	b.Position = UDim2.new(1, x, 0.5, -13)
-	b.Text = txt
-	b.Font = Enum.Font.GothamBold
-	b.TextSize = 11
-	b.TextColor3 = Color3.fromRGB(220,220,240)
-	b.BackgroundColor3 = Color3.fromRGB(60,60,90)
-	b.BorderSizePixel = 0
-	Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
-	return b
+-- [ MENU DROPDOWN SUPERIOR ]
+local menuBtn = Instance.new("TextButton", header)
+menuBtn.Size = UDim2.new(0, 100, 0, 26)
+menuBtn.Position = UDim2.new(0, 180, 0.5, -13)
+menuBtn.Text = "CATEGORY: ALL"
+menuBtn.Font = Enum.Font.GothamBold
+menuBtn.TextSize = 10
+menuBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+menuBtn.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", menuBtn)
+
+local menuFrame = Instance.new("Frame", main)
+menuFrame.Size = UDim2.new(0, 120, 0, 150)
+menuFrame.Position = UDim2.new(0, 180, 0, 45)
+menuFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 50)
+menuFrame.Visible = false
+menuFrame.ZIndex = 10
+Instance.new("UICorner", menuFrame)
+
+local function addMenuOption(txt, y, cat)
+    local b = Instance.new("TextButton", menuFrame)
+    b.Size = UDim2.new(1, -10, 0, 25)
+    b.Position = UDim2.new(0, 5, 0, y)
+    b.Text = txt
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 10
+    b.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+    b.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", b)
+    b.MouseButton1Click:Connect(function()
+        Nexus.Category = cat
+        menuBtn.Text = "CATEGORY: " .. cat
+        menuFrame.Visible = false
+    end)
 end
 
-local btnPause = topButton("PAUSE", -260)
-local btnClear = topButton("CLEAR", -170)
-local btnCopyAll = topButton("COPY ALL", -80)
+addMenuOption("ALL", 5, "ALL")
+addMenuOption("REMOTES", 35, "REMOTES")
+addMenuOption("OBJECTS", 65, "OBJECTS")
+addMenuOption("MODULES", 95, "MODULES")
+addMenuOption("FOLDERS", 125, "FOLDERS")
 
-btnClose = Instance.new("TextButton", header)
-btnClose.Size = UDim2.new(0, 30, 0, 26)
-btnClose.Position = UDim2.new(1, -35, 0.5, -13)
-btnClose.Text = "X"
-btnClose.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-btnClose.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", btnClose).CornerRadius = UDim.new(0, 8)
+menuBtn.MouseButton1Click:Connect(function() menuFrame.Visible = not menuFrame.Visible end)
+
+-- [ BOTÕES DE AÇÃO NO HEADER ]
+local function topBtn(txt, x, color)
+    local b = Instance.new("TextButton", header)
+    b.Size = UDim2.new(0, 60, 0, 26)
+    b.Position = UDim2.new(1, x, 0.5, -13)
+    b.Text = txt
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 9
+    b.BackgroundColor3 = color or Color3.fromRGB(60, 60, 90)
+    b.TextColor3 = Color3.new(1, 1, 1)
+    Instance.new("UICorner", b)
+    return b
+end
+
+local btnClose = topBtn("X", -35, Color3.fromRGB(150, 50, 50))
+local btnCopyAll = topBtn("COPY", -100)
+local btnClear = topBtn("CLEAR", -165)
+
 btnClose.MouseButton1Click:Connect(function() gui:Destroy() end)
 
-local sidebar = Instance.new("Frame", main)
-sidebar.Size = UDim2.new(0,150,1,-44)
-sidebar.Position = UDim2.new(0,0,0,44)
-sidebar.BackgroundColor3 = Color3.fromRGB(22,22,36)
-sidebar.BorderSizePixel = 0
-
-local function sideButton(txt, y)
-	local b = Instance.new("TextButton", sidebar)
-	b.Size = UDim2.new(1,-16,0,34)
-	b.Position = UDim2.new(0,8,0,y)
-	b.Text = txt
-	b.Font = Enum.Font.GothamBold
-	b.TextSize = 12
-	b.TextColor3 = Color3.fromRGB(220,220,240)
-	b.BackgroundColor3 = Color3.fromRGB(40,40,60)
-	b.BorderSizePixel = 0
-	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
-	return b
-end
-
-sideButton("ALL", 12)
-sideButton("REMOTES", 52)
-sideButton("OBJECTS", 92)
-sideButton("MODULES", 132)
-sideButton("FOLDERS", 172)
-
+-- [ ÁREA DE CONTEÚDO ]
 local content = Instance.new("Frame", main)
-content.Size = UDim2.new(1,-150,1,-100)
-content.Position = UDim2.new(0,150,0,44)
-content.BackgroundColor3 = Color3.fromRGB(14,14,22)
-content.BorderSizePixel = 0
+content.Size = UDim2.new(1, -20, 1, -110)
+content.Position = UDim2.new(0, 10, 0, 50)
+content.BackgroundColor3 = Color3.fromRGB(14, 14, 22)
+Instance.new("UICorner", content)
 
 local scroll = Instance.new("ScrollingFrame", content)
-scroll.Size = UDim2.new(1,-10,1,-10)
-scroll.Position = UDim2.new(0,5,0,5)
-scroll.CanvasSize = UDim2.new(0,0,0,0)
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-scroll.ScrollBarImageTransparency = 0.6
+scroll.Size = UDim2.new(1, -10, 1, -10)
+scroll.Position = UDim2.new(0, 5, 0, 5)
 scroll.BackgroundTransparency = 1
-scroll.BorderSizePixel = 0
-local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0,6)
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.ScrollBarThickness = 3
+Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 5)
 
 local bottom = Instance.new("Frame", main)
-bottom.Size = UDim2.new(1,0,0,56)
-bottom.Position = UDim2.new(0,0,1,-56)
-bottom.BackgroundColor3 = Color3.fromRGB(26,26,40)
-bottom.BorderSizePixel = 0
+bottom.Size = UDim2.new(1, 0, 0, 50)
+bottom.Position = UDim2.new(0, 0, 1, -50)
+bottom.BackgroundColor3 = Color3.fromRGB(26, 26, 40)
+Instance.new("UICorner", bottom)
 
 local start = Instance.new("TextButton", bottom)
-start.Size = UDim2.new(0,220,0,36)
-start.Position = UDim2.new(0.5,-110,0.5,-18)
+start.Size = UDim2.new(0, 200, 0, 35)
+start.Position = UDim2.new(0.5, -100, 0.5, -17)
 start.Text = "START CAPTURE"
 start.Font = Enum.Font.GothamBold
 start.TextSize = 13
-start.TextColor3 = Color3.new(1,1,1)
-start.BackgroundColor3 = Color3.fromRGB(0,170,130)
-Instance.new("UICorner", start).CornerRadius = UDim.new(0,12)
+start.TextColor3 = Color3.new(1, 1, 1)
+start.BackgroundColor3 = Color3.fromRGB(0, 170, 130)
+Instance.new("UICorner", start)
 
 start.MouseButton1Click:Connect(function()
 	Nexus.Active = not Nexus.Active
 	start.Text = Nexus.Active and "STOP" or "START CAPTURE"
-	start.BackgroundColor3 = Nexus.Active and Color3.fromRGB(200,70,70) or Color3.fromRGB(0,170,130)
+	start.BackgroundColor3 = Nexus.Active and Color3.fromRGB(200, 70, 70) or Color3.fromRGB(0, 170, 130)
 end)
 
 btnClear.MouseButton1Click:Connect(function()
@@ -179,23 +182,25 @@ end)
 
 btnCopyAll.MouseButton1Click:Connect(function()
     setclipboard(Nexus.AllLogs)
-    btnCopyAll.Text = "COPIED!"
+    btnCopyAll.Text = "OK!"
     task.wait(1)
-    btnCopyAll.Text = "COPY ALL"
+    btnCopyAll.Text = "COPY"
 end)
 
 -- [ FUNÇÃO DE LOG ]
-local function addLog(titleText, contentText)
+local function addLog(titleText, contentText, category)
+    if Nexus.Category ~= "ALL" and Nexus.Category ~= category then return end
+
     local logFrame = Instance.new("Frame", scroll)
-    logFrame.Size = UDim2.new(1, -10, 0, 45)
+    logFrame.Size = UDim2.new(1, -10, 0, 50)
     logFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 46)
-    Instance.new("UICorner", logFrame).CornerRadius = UDim.new(0, 8)
+    Instance.new("UICorner", logFrame)
     
     local box = Instance.new("TextBox", logFrame)
-    box.Size = UDim2.new(1, -80, 1, 0)
+    box.Size = UDim2.new(1, -70, 1, 0)
     box.Position = UDim2.new(0, 10, 0, 0)
     box.BackgroundTransparency = 1
-    box.Text = "<b>" .. titleText .. "</b> | " .. contentText
+    box.Text = "<b>[" .. category .. "] " .. titleText .. "</b> | " .. contentText
     box.TextColor3 = Color3.fromRGB(210, 210, 235)
     box.Font = Enum.Font.Code
     box.TextSize = 10
@@ -205,13 +210,13 @@ local function addLog(titleText, contentText)
     box.RichText = true
 
     local copyBtn = Instance.new("TextButton", logFrame)
-    copyBtn.Size = UDim2.new(0, 60, 0, 25)
-    copyBtn.Position = UDim2.new(1, -65, 0.5, -12)
+    copyBtn.Size = UDim2.new(0, 50, 0, 25)
+    copyBtn.Position = UDim2.new(1, -55, 0.5, -12)
     copyBtn.Text = "COPY"
     copyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
     copyBtn.TextColor3 = Color3.new(1, 1, 1)
     copyBtn.Font = Enum.Font.GothamBold
-    copyBtn.TextSize = 9
+    copyBtn.TextSize = 8
     Instance.new("UICorner", copyBtn)
     
     copyBtn.MouseButton1Click:Connect(function()
@@ -221,7 +226,7 @@ local function addLog(titleText, contentText)
         copyBtn.Text = "COPY"
     end)
     
-    Nexus.AllLogs = Nexus.AllLogs .. titleText .. " | " .. contentText .. "\n"
+    Nexus.AllLogs = Nexus.AllLogs .. "[" .. category .. "] " .. titleText .. " | " .. contentText .. "\n"
     scroll.CanvasPosition = Vector2.new(0, 999999)
 end
 
@@ -230,7 +235,7 @@ task.spawn(function()
     while true do
         if #Nexus.Queue > 0 then
             local data = table.remove(Nexus.Queue, 1)
-            addLog(data.Name, data.Content)
+            addLog(data.Name, data.Content, data.Category)
         end
         task.wait(0.1)
     end
@@ -251,7 +256,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- [ CAPTURA INTELIGENTE ]
+-- [ CAPTURA ]
 local mt = getrawmetatable(game)
 local old = mt.__namecall
 setreadonly(mt, false)
@@ -270,11 +275,11 @@ mt.__namecall = newcclosure(function(self, ...)
         local key = self.Name .. argStr
         if not Nexus.ProcessedKeys[key] then
             Nexus.ProcessedKeys[key] = true
-            table.insert(Nexus.Queue, {Name = self.Name, Content = argStr})
+            table.insert(Nexus.Queue, {Name = self.Name, Content = argStr, Category = "REMOTES"})
         end
     end
     return old(self, ...)
 end)
 
 setreadonly(mt, true)
-addLog("SYSTEM", "Nexus Core v8.1 Professional UI Restored")
+addLog("SYSTEM", "Nexus Core v8.2 Loaded Successfully", "ALL")
