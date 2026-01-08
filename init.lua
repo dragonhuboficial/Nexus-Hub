@@ -1,12 +1,13 @@
 --[[
-    NEXUS PHANTOM v7.0 APEX | ABSOLUTE VISIBILITY
-    Focado em resolver o bug de renderização do Delta
+    NEXUS CORE v7.5 | THE FINAL FIX
+    Focado em visibilidade absoluta, cópia e categorização.
 ]]
 
 task.wait(1)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
+local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
@@ -14,70 +15,172 @@ if PlayerGui:FindFirstChild("NexusUI") then
 	PlayerGui.NexusUI:Destroy()
 end
 
-local Phantom = { Active = false }
+local State = { Active = false, Category = "ALL" }
 
--- [ INTERFACE ULTRA SIMPLES ]
+-- [ MOTOR DE DESCRIPTOGRAFIA ]
+local Decryption = {}
+function Decryption.safeString(v)
+    local t = typeof(v)
+    if t == "table" then
+        local s = "{"
+        for k, val in pairs(v) do s = s .. tostring(k) .. ":" .. tostring(val) .. "," end
+        return (#s > 1 and s:sub(1, #s-1) or s) .. "}"
+    elseif t == "Instance" then return v.Name end
+    return tostring(v)
+end
+
+-- [ INTERFACE ]
 local gui = Instance.new("ScreenGui", PlayerGui)
 gui.Name = "NexusUI"
 gui.ResetOnSpawn = false
 
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 400, 0, 300)
-main.Position = UDim2.new(0.5, -200, 0.5, -150)
-main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
-main.BorderSizePixel = 2
-main.BorderColor3 = Color3.new(1, 1, 1)
+main.Size = UDim2.new(0, 600, 0, 400)
+main.Position = UDim2.new(0.5, -300, 0.5, -200)
+main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+main.BorderSizePixel = 0
+Instance.new("UICorner", main)
 
-local title = Instance.new("TextLabel", main)
-title.Size = UDim2.new(1, 0, 0, 30)
-title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
-title.Text = "NEXUS PHANTOM - F9 CONSOLE LOGS"
+local header = Instance.new("Frame", main)
+header.Size = UDim2.new(1, 0, 0, 40)
+header.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+header.BorderSizePixel = 0
+Instance.new("UICorner", header)
+
+local title = Instance.new("TextLabel", header)
+title.Size = UDim2.new(1, -100, 1, 0)
+title.Position = UDim2.new(0, 15, 0, 0)
+title.BackgroundTransparency = 1
+title.Text = "NEXUS CORE v7.5 - PHANTOM"
 title.TextColor3 = Color3.new(1, 1, 1)
+title.Font = Enum.Font.GothamBold
 title.TextSize = 14
+title.TextXAlignment = Enum.TextXAlignment.Left
 
-local close = Instance.new("TextButton", title)
+local close = Instance.new("TextButton", header)
 close.Size = UDim2.new(0, 30, 0, 30)
-close.Position = UDim2.new(1, -30, 0, 0)
+close.Position = UDim2.new(1, -35, 0, 5)
 close.Text = "X"
-close.BackgroundColor3 = Color3.new(0.6, 0, 0)
+close.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
 close.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", close)
 close.MouseButton1Click:Connect(function() gui:Destroy() end)
 
-local logArea = Instance.new("Frame", main)
-logArea.Size = UDim2.new(1, -20, 1, -80)
-logArea.Position = UDim2.new(0, 10, 0, 40)
-logArea.BackgroundColor3 = Color3.new(0, 0, 0)
+local sidebar = Instance.new("Frame", main)
+sidebar.Size = UDim2.new(0, 120, 1, -40)
+sidebar.Position = UDim2.new(0, 0, 0, 40)
+sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+sidebar.BorderSizePixel = 0
 
-local status = Instance.new("TextLabel", logArea)
-status.Size = UDim2.new(1, 0, 1, 0)
-status.BackgroundTransparency = 1
-status.Text = "CHECK F9 CONSOLE FOR LOGS\n\nCapture is: OFF"
-status.TextColor3 = Color3.new(0, 1, 0)
-status.TextSize = 18
-status.Font = Enum.Font.SourceSansBold
+local function sideBtn(txt, y, cat)
+    local b = Instance.new("TextButton", sidebar)
+    b.Size = UDim2.new(1, -10, 0, 30)
+    b.Position = UDim2.new(0, 5, 0, y)
+    b.Text = txt
+    b.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+    b.TextColor3 = Color3.new(1, 1, 1)
+    b.Font = Enum.Font.GothamBold
+    b.TextSize = 11
+    Instance.new("UICorner", b)
+    b.MouseButton1Click:Connect(function() State.Category = cat end)
+end
 
-local start = Instance.new("TextButton", main)
-start.Size = UDim2.new(0, 150, 0, 35)
-start.Position = UDim2.new(0.5, -75, 1, -40)
-start.Text = "START"
-start.BackgroundColor3 = Color3.new(0, 0.5, 0)
+sideBtn("ALL", 10, "ALL")
+sideBtn("REMOTES", 45, "REMOTES")
+sideBtn("OBJECTS", 80, "OBJECTS")
+
+local container = Instance.new("ScrollingFrame", main)
+container.Size = UDim2.new(1, -130, 1, -100)
+container.Position = UDim2.new(0, 125, 0, 45)
+container.BackgroundTransparency = 1
+container.CanvasSize = UDim2.new(0, 0, 0, 0)
+container.AutomaticCanvasSize = Enum.AutomaticSize.Y
+container.ScrollBarThickness = 4
+local layout = Instance.new("UIListLayout", container)
+layout.Padding = UDim.new(0, 5)
+
+local bottom = Instance.new("Frame", main)
+bottom.Size = UDim2.new(1, 0, 0, 50)
+bottom.Position = UDim2.new(0, 0, 1, -50)
+bottom.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+
+local start = Instance.new("TextButton", bottom)
+start.Size = UDim2.new(0, 180, 0, 35)
+start.Position = UDim2.new(0.5, -90, 0.5, -17)
+start.Text = "START CAPTURE"
+start.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
 start.TextColor3 = Color3.new(1, 1, 1)
+start.Font = Enum.Font.GothamBold
+Instance.new("UICorner", start)
 
 start.MouseButton1Click:Connect(function()
-	Phantom.Active = not Phantom.Active
-	start.Text = Phantom.Active and "STOP" or "START"
-	start.BackgroundColor3 = Phantom.Active and Color3.new(0.5, 0, 0) or Color3.new(0, 0.5, 0)
-    status.Text = "CHECK F9 CONSOLE FOR LOGS\n\nCapture is: " .. (Phantom.Active and "ON" or "OFF")
+	State.Active = not State.Active
+	start.Text = State.Active and "STOP CAPTURE" or "START CAPTURE"
+	start.BackgroundColor3 = State.Active and Color3.fromRGB(180, 50, 50) or Color3.fromRGB(0, 150, 100)
 end)
+
+-- [ FUNÇÃO DE LOG COM TEXTBOX (PARA CÓPIA) ]
+local function addLog(titleText, contentText, category)
+    if State.Category ~= "ALL" and State.Category ~= category then return end
+
+    local logFrame = Instance.new("Frame", container)
+    logFrame.Size = UDim2.new(1, -10, 0, 80)
+    logFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    Instance.new("UICorner", logFrame)
+
+    local t = Instance.new("TextLabel", logFrame)
+    t.Size = UDim2.new(1, -10, 0, 20)
+    t.Position = UDim2.new(0, 10, 0, 5)
+    t.BackgroundTransparency = 1
+    t.Text = "[" .. category .. "] " .. titleText
+    t.TextColor3 = Color3.fromRGB(0, 170, 255)
+    t.Font = Enum.Font.GothamBold
+    t.TextSize = 11
+    t.TextXAlignment = Enum.TextXAlignment.Left
+
+    -- TextBox para garantir visibilidade e permitir cópia
+    local box = Instance.new("TextBox", logFrame)
+    box.Size = UDim2.new(1, -20, 0, 45)
+    box.Position = UDim2.new(0, 10, 0, 25)
+    box.BackgroundTransparency = 1
+    box.Text = contentText
+    box.TextColor3 = Color3.new(1, 1, 1)
+    box.Font = Enum.Font.Code
+    box.TextSize = 10
+    box.TextXAlignment = Enum.TextXAlignment.Left
+    box.TextYAlignment = Enum.TextYAlignment.Top
+    box.ClearTextOnFocus = false
+    box.ReadOnly = true
+    box.TextWrapped = true
+
+    local copyBtn = Instance.new("TextButton", logFrame)
+    copyBtn.Size = UDim2.new(0, 60, 0, 20)
+    copyBtn.Position = UDim2.new(1, -70, 0, 5)
+    copyBtn.Text = "COPY"
+    copyBtn.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+    copyBtn.TextColor3 = Color3.new(1, 1, 1)
+    copyBtn.Font = Enum.Font.GothamBold
+    copyBtn.TextSize = 9
+    Instance.new("UICorner", copyBtn)
+    
+    copyBtn.MouseButton1Click:Connect(function()
+        setclipboard(contentText)
+        copyBtn.Text = "COPIED!"
+        task.wait(1)
+        copyBtn.Text = "COPY"
+    end)
+
+    container.CanvasPosition = Vector2.new(0, 999999)
+end
 
 -- [ DRAGGING ]
 local dragging, dragStart, startPos
-title.InputBegan:Connect(function(input)
+header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true; dragStart = input.Position; startPos = main.Position
     end
 end)
-title.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+header.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 UserInputService.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
@@ -85,23 +188,22 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- [ CAPTURA REDUNDANTE ]
+-- [ CAPTURA ]
 local mt = getrawmetatable(game)
 local old = mt.__namecall
 setreadonly(mt, false)
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
-    if Phantom.Active and (method == "FireServer" or method == "InvokeServer") then
+    if State.Active and (method == "FireServer" or method == "InvokeServer") then
         local args = {...}
-        print("----------------------------------------")
-        print("[NEXUS] Remote: " .. self.Name)
-        print("[NEXUS] Method: " .. method)
-        for i, v in pairs(args) do
-            print(string.format("[NEXUS] Arg[%d]: %s", i, tostring(v)))
-        end
+        task.spawn(function()
+            local argStr = ""
+            for i, v in pairs(args) do argStr = argStr .. "["..i.."]: " .. Decryption.safeString(v) .. " " end
+            addLog(self.Name, argStr, "REMOTES")
+        end)
     end
     return old(self, ...)
 end)
 setreadonly(mt, true)
 
-print("NEXUS PHANTOM: Use F9 to see logs!")
+addLog("SYSTEM", "Nexus Core v7.5 Loaded. Ready for capture.", "ALL")
