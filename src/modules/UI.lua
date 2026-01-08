@@ -1,6 +1,7 @@
 local CoreGui = game:GetService("CoreGui")
 local UserInputService = game:GetService("UserInputService")
 local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
 
 local UI = {}
 
@@ -17,6 +18,7 @@ function UI.init(Nexus)
     Main.Position = UDim2.new(0.5, -325, 0.5, -240)
     Main.BackgroundColor3 = Color3.fromRGB(10, 10, 15)
     Main.BorderSizePixel = 0
+    Main.ClipsDescendants = true
     
     local Corner = Instance.new("UICorner", Main)
     Corner.CornerRadius = UDim.new(0, 12)
@@ -28,8 +30,45 @@ function UI.init(Nexus)
     Title.TextColor3 = Nexus.Settings.Theme
     Title.TextXAlignment = Enum.TextXAlignment.Left
     Title.Font = Enum.Font.GothamBold
-    Title.TextSize = 18
+    Title.TextSize = 16
     Instance.new("UICorner", Title).CornerRadius = UDim.new(0, 12)
+
+    -- [ BOTÕES DE CONTROLE ]
+    local ControlsTop = Instance.new("Frame", Title)
+    ControlsTop.Size = UDim2.new(0, 100, 1, 0)
+    ControlsTop.Position = UDim2.new(1, -100, 0, 0)
+    ControlsTop.BackgroundTransparency = 1
+
+    local function createTopBtn(text, color, pos, callback)
+        local btn = Instance.new("TextButton", ControlsTop)
+        btn.Size = UDim2.new(0, 30, 0, 30)
+        btn.Position = UDim2.new(0, pos, 0.5, -15)
+        btn.BackgroundColor3 = color
+        btn.Text = text
+        btn.TextColor3 = Color3.new(1,1,1)
+        btn.Font = Enum.Font.GothamBold
+        btn.TextSize = 14
+        Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+        btn.MouseButton1Click:Connect(callback)
+        return btn
+    end
+
+    -- Botão Fechar
+    createTopBtn("X", Color3.fromRGB(200, 50, 50), 60, function()
+        Screen:Destroy()
+    end)
+
+    -- Botão Minimizar
+    local minimized = false
+    local originalSize = Main.Size
+    createTopBtn("-", Color3.fromRGB(200, 150, 50), 20, function()
+        minimized = not minimized
+        if minimized then
+            Main:TweenSize(UDim2.new(0, 650, 0, 50), "Out", "Quad", 0.3, true)
+        else
+            Main:TweenSize(originalSize, "Out", "Quad", 0.3, true)
+        end
+    end)
     
     local Container = Instance.new("ScrollingFrame", Main)
     Container.Size = UDim2.new(0.96, 0, 0.75, 0)
@@ -63,10 +102,9 @@ function UI.init(Nexus)
     
     local toggleBtn = createBtn("START CAPTURE", UDim2.new(0.05, 0, 0, 0), Color3.fromRGB(0, 180, 120), function()
         Nexus.Active = not Nexus.Active
-        _G.NexusActive = Nexus.Active -- Sincroniza com o Core
+        _G.NexusActive = Nexus.Active
         toggleBtn.Text = Nexus.Active and "STOP CAPTURE" or "START CAPTURE"
         toggleBtn.BackgroundColor3 = Nexus.Active and Color3.fromRGB(220, 60, 60) or Color3.fromRGB(0, 180, 120)
-        print("Nexus-Hub: Captura " .. (Nexus.Active and "Ativada" or "Desativada"))
     end)
     
     createBtn("CLEAR LOGS", UDim2.new(0.38, 0, 0, 0), Color3.fromRGB(180, 50, 50), function()
