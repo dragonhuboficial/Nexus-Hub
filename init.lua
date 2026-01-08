@@ -1,5 +1,5 @@
 --[[
-    NEXUS PHANTOM v7.0 APEX | INTELLIGENT CAPTURE
+    NEXUS PHANTOM v7.0 APEX | UI FIX & INTELLIGENT CAPTURE
     "Strategy over Brutality"
 ]]
 
@@ -19,8 +19,7 @@ end
 local Phantom = {
     Active = false,
     SafeMode = true,
-    DetectedAntiCheats = {},
-    Methods = {"B64", "REV", "XOR-1B", "ROT13"}
+    DetectedAntiCheats = {}
 }
 
 local Decryption = {}
@@ -34,13 +33,11 @@ function Decryption.safeString(v)
     return tostring(v)
 end
 
--- Descriptografia Recursiva (Tenta várias camadas)
 function Decryption.deepDecrypt(str, depth)
     depth = depth or 0
     if depth > 3 or type(str) ~= "string" or #str < 2 then return str, nil end
     
     local current = str
-    local methodsUsed = {}
     
     -- 1. Base64
     local s, b = pcall(HttpService.Base64Decode, HttpService, current)
@@ -182,20 +179,34 @@ start.MouseButton1Click:Connect(function()
 end)
 
 btnClear.MouseButton1Click:Connect(function()
-    for _, v in pairs(scroll:GetChildren()) do if v:IsA("TextLabel") then v:Destroy() end end
+    for _, v in pairs(scroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
 end)
 
 local function addLog(text)
-	local item = Instance.new("TextLabel", scroll)
-	item.Size = UDim2.new(1,-8,0,32)
-	item.BackgroundColor3 = Color3.fromRGB(30,30,46)
-	item.Text = " "..text
-	item.TextColor3 = Color3.fromRGB(210,210,235)
-	item.Font = Enum.Font.Code
-	item.TextSize = 11
-	item.TextXAlignment = Enum.TextXAlignment.Left
-	item.RichText = true
-	Instance.new("UICorner", item).CornerRadius = UDim.new(0,8)
+    local logFrame = Instance.new("Frame", scroll)
+    logFrame.Size = UDim2.new(1, -10, 0, 40)
+    logFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 46)
+    logFrame.BorderSizePixel = 0
+    Instance.new("UICorner", logFrame).CornerRadius = UDim.new(0, 8)
+    
+    local item = Instance.new("TextLabel", logFrame)
+    item.Size = UDim2.new(1, -16, 1, 0)
+    item.Position = UDim2.new(0, 8, 0, 0)
+    item.BackgroundTransparency = 1
+    item.Text = text
+    item.TextColor3 = Color3.fromRGB(210, 210, 235)
+    item.Font = Enum.Font.Code
+    item.TextSize = 11
+    item.TextXAlignment = Enum.TextXAlignment.Left
+    item.TextWrapped = true
+    item.RichText = true
+    
+    -- Ajuste automático de altura do card
+    local contentSize = item.TextBounds.Y
+    if contentSize > 30 then
+        logFrame.Size = UDim2.new(1, -10, 0, contentSize + 15)
+    end
+    
     scroll.CanvasPosition = Vector2.new(0, 999999)
 end
 
@@ -222,9 +233,8 @@ setreadonly(mt, false)
 mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
     
-    -- Anti-Kick Detection (Monitora se o jogo tenta te expulsar)
     if method == "Kick" and self == player then
-        addLog("<font color='#FF0000'>[WARNING]</font> Game tried to KICK you! Blocked.")
+        addLog("<font color='#FF0000'>[WARNING]</font> Kick Blocked!")
         return nil
     end
 
