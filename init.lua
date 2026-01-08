@@ -1,13 +1,12 @@
 --[[
-    NEXUS PHANTOM v7.0 APEX | VISIBILITY OVERHAUL
-    Focado em garantir que o texto apareça no Delta
+    NEXUS PHANTOM v7.0 APEX | ABSOLUTE VISIBILITY
+    Focado em resolver o bug de renderização do Delta
 ]]
 
 task.wait(1)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
-local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
@@ -17,134 +16,68 @@ end
 
 local Phantom = { Active = false }
 
-local Decryption = {}
-function Decryption.safeString(v)
-    local t = typeof(v)
-    if t == "table" then
-        local s = "{"
-        for k, val in pairs(v) do s = s .. tostring(k) .. ":" .. tostring(val) .. "," end
-        return (#s > 1 and s:sub(1, #s-1) or s) .. "}"
-    elseif t == "Instance" then return v.Name end
-    return tostring(v)
-end
-
-function Decryption.deepDecrypt(str, depth)
-    depth = depth or 0
-    if depth > 2 or type(str) ~= "string" or #str < 2 then return str, nil end
-    local s, b = pcall(HttpService.Base64Decode, HttpService, str)
-    if s then return Decryption.deepDecrypt(b, depth + 1) end
-    local rev = string.reverse(str)
-    if #rev > 4 and rev:match("^[%w%s%p]+$") then return Decryption.deepDecrypt(rev, depth + 1) end
-    return str, nil
-end
-
--- [ INTERFACE ]
+-- [ INTERFACE ULTRA SIMPLES ]
 local gui = Instance.new("ScreenGui", PlayerGui)
 gui.Name = "NexusUI"
 gui.ResetOnSpawn = false
 
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 720, 0, 420)
-main.Position = UDim2.new(0.5, -360, 0.5, -210)
-main.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+main.Size = UDim2.new(0, 400, 0, 300)
+main.Position = UDim2.new(0.5, -200, 0.5, -150)
+main.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
 main.BorderSizePixel = 2
-main.BorderColor3 = Color3.fromRGB(0, 170, 255)
+main.BorderColor3 = Color3.new(1, 1, 1)
 
-local header = Instance.new("Frame", main)
-header.Size = UDim2.new(1, 0, 0, 40)
-header.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-header.BorderSizePixel = 0
-
-local title = Instance.new("TextLabel", header)
-title.Size = UDim2.new(1, -100, 1, 0)
-title.Position = UDim2.new(0, 15, 0, 0)
-title.BackgroundTransparency = 1
-title.Text = "NEXUS PHANTOM - VISIBILITY MODE"
+local title = Instance.new("TextLabel", main)
+title.Size = UDim2.new(1, 0, 0, 30)
+title.BackgroundColor3 = Color3.fromRGB(40, 40, 40)
+title.Text = "NEXUS PHANTOM - F9 CONSOLE LOGS"
 title.TextColor3 = Color3.new(1, 1, 1)
-title.Font = Enum.Font.SourceSansBold
-title.TextSize = 16
-title.TextXAlignment = Enum.TextXAlignment.Left
+title.TextSize = 14
 
-local close = Instance.new("TextButton", header)
+local close = Instance.new("TextButton", title)
 close.Size = UDim2.new(0, 30, 0, 30)
-close.Position = UDim2.new(1, -35, 0, 5)
+close.Position = UDim2.new(1, -30, 0, 0)
 close.Text = "X"
-close.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
+close.BackgroundColor3 = Color3.new(0.6, 0, 0)
 close.TextColor3 = Color3.new(1, 1, 1)
 close.MouseButton1Click:Connect(function() gui:Destroy() end)
 
-local sidebar = Instance.new("Frame", main)
-sidebar.Size = UDim2.new(0, 140, 1, -40)
-sidebar.Position = UDim2.new(0, 0, 0, 40)
-sidebar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-sidebar.BorderSizePixel = 0
+local logArea = Instance.new("Frame", main)
+logArea.Size = UDim2.new(1, -20, 1, -80)
+logArea.Position = UDim2.new(0, 10, 0, 40)
+logArea.BackgroundColor3 = Color3.new(0, 0, 0)
 
-local content = Instance.new("Frame", main)
-content.Size = UDim2.new(1, -140, 1, -90)
-content.Position = UDim2.new(0, 140, 0, 40)
-content.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
-content.BorderSizePixel = 0
+local status = Instance.new("TextLabel", logArea)
+status.Size = UDim2.new(1, 0, 1, 0)
+status.BackgroundTransparency = 1
+status.Text = "CHECK F9 CONSOLE FOR LOGS\n\nCapture is: OFF"
+status.TextColor3 = Color3.new(0, 1, 0)
+status.TextSize = 18
+status.Font = Enum.Font.SourceSansBold
 
-local scroll = Instance.new("ScrollingFrame", content)
-scroll.Size = UDim2.new(1, -10, 1, -10)
-scroll.Position = UDim2.new(0, 5, 0, 5)
-scroll.BackgroundTransparency = 1
-scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-scroll.ScrollBarThickness = 4
-
-local layout = Instance.new("UIListLayout", scroll)
-layout.Padding = UDim.new(0, 4)
-
-local bottom = Instance.new("Frame", main)
-bottom.Size = UDim2.new(1, 0, 0, 50)
-bottom.Position = UDim2.new(0, 0, 1, -50)
-bottom.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-
-local start = Instance.new("TextButton", bottom)
-start.Size = UDim2.new(0, 200, 0, 35)
-start.Position = UDim2.new(0.5, -100, 0.5, -17)
-start.Text = "START CAPTURE"
-start.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
+local start = Instance.new("TextButton", main)
+start.Size = UDim2.new(0, 150, 0, 35)
+start.Position = UDim2.new(0.5, -75, 1, -40)
+start.Text = "START"
+start.BackgroundColor3 = Color3.new(0, 0.5, 0)
 start.TextColor3 = Color3.new(1, 1, 1)
-start.Font = Enum.Font.SourceSansBold
 
 start.MouseButton1Click:Connect(function()
 	Phantom.Active = not Phantom.Active
-	start.Text = Phantom.Active and "STOP CAPTURE" or "START CAPTURE"
-	start.BackgroundColor3 = Phantom.Active and Color3.fromRGB(150, 0, 0) or Color3.fromRGB(0, 150, 0)
+	start.Text = Phantom.Active and "STOP" or "START"
+	start.BackgroundColor3 = Phantom.Active and Color3.new(0.5, 0, 0) or Color3.new(0, 0.5, 0)
+    status.Text = "CHECK F9 CONSOLE FOR LOGS\n\nCapture is: " .. (Phantom.Active and "ON" or "OFF")
 end)
-
-local function addLog(txt)
-    local label = Instance.new("TextLabel", scroll)
-    label.Size = UDim2.new(1, -10, 0, 35)
-    label.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-    label.BorderSizePixel = 1
-    label.BorderColor3 = Color3.fromRGB(60, 60, 70)
-    label.Text = "  " .. tostring(txt)
-    label.TextColor3 = Color3.new(1, 1, 1)
-    label.Font = Enum.Font.SourceSans
-    label.TextSize = 14
-    label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextWrapped = true
-    label.ZIndex = 10
-    
-    -- Ajuste de altura simples
-    if #tostring(txt) > 50 then
-        label.Size = UDim2.new(1, -10, 0, 50)
-    end
-    
-    scroll.CanvasPosition = Vector2.new(0, 999999)
-end
 
 -- [ DRAGGING ]
 local dragging, dragStart, startPos
-header.InputBegan:Connect(function(input)
+title.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = true; dragStart = input.Position; startPos = main.Position
     end
 end)
-header.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
+title.InputEnded:Connect(function(input) if input.UserInputType == Enum.UserInputType.MouseButton1 then dragging = false end end)
 UserInputService.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local delta = input.Position - dragStart
@@ -152,7 +85,7 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
--- [ CAPTURA ]
+-- [ CAPTURA REDUNDANTE ]
 local mt = getrawmetatable(game)
 local old = mt.__namecall
 setreadonly(mt, false)
@@ -160,14 +93,15 @@ mt.__namecall = newcclosure(function(self, ...)
     local method = getnamecallmethod()
     if Phantom.Active and (method == "FireServer" or method == "InvokeServer") then
         local args = {...}
-        task.spawn(function()
-            local argStr = ""
-            for i, v in pairs(args) do argStr = argStr .. tostring(i) .. ":" .. Decryption.safeString(v) .. " " end
-            addLog(self.Name .. " | " .. argStr)
-        end)
+        print("----------------------------------------")
+        print("[NEXUS] Remote: " .. self.Name)
+        print("[NEXUS] Method: " .. method)
+        for i, v in pairs(args) do
+            print(string.format("[NEXUS] Arg[%d]: %s", i, tostring(v)))
+        end
     end
     return old(self, ...)
 end)
 setreadonly(mt, true)
 
-addLog("SYSTEM: Nexus Phantom Loaded (Visibility Mode)")
+print("NEXUS PHANTOM: Use F9 to see logs!")
