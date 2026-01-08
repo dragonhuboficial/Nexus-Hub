@@ -5,8 +5,12 @@ local HttpService = game:GetService("HttpService")
 local UI = {}
 
 function UI.init(Nexus)
+    -- Limpa UI antiga
+    pcall(function() CoreGui.NexusHubUI:Destroy() end)
+
     local Screen = Instance.new("ScreenGui", CoreGui)
     Screen.Name = "NexusHubUI"
+    Screen.ResetOnSpawn = false
     
     local Main = Instance.new("Frame", Screen)
     Main.Size = UDim2.new(0, 650, 0, 480)
@@ -33,6 +37,7 @@ function UI.init(Nexus)
     Container.BackgroundTransparency = 1
     Container.CanvasSize = UDim2.new(0, 0, 0, 0)
     Container.ScrollBarThickness = 2
+    Container.AutomaticCanvasSize = Enum.AutomaticCanvasSize.Y
     
     local ListLayout = Instance.new("UIListLayout", Container)
     ListLayout.Padding = UDim.new(0, 8)
@@ -58,9 +63,10 @@ function UI.init(Nexus)
     
     local toggleBtn = createBtn("START CAPTURE", UDim2.new(0.05, 0, 0, 0), Color3.fromRGB(0, 180, 120), function()
         Nexus.Active = not Nexus.Active
-        _G.NexusActive = Nexus.Active
+        _G.NexusActive = Nexus.Active -- Sincroniza com o Core
         toggleBtn.Text = Nexus.Active and "STOP CAPTURE" or "START CAPTURE"
         toggleBtn.BackgroundColor3 = Nexus.Active and Color3.fromRGB(220, 60, 60) or Color3.fromRGB(0, 180, 120)
+        print("Nexus-Hub: Captura " .. (Nexus.Active and "Ativada" or "Desativada"))
     end)
     
     createBtn("CLEAR LOGS", UDim2.new(0.38, 0, 0, 0), Color3.fromRGB(180, 50, 50), function()
@@ -73,7 +79,6 @@ function UI.init(Nexus)
     createBtn("EXPORT JSON", UDim2.new(0.71, 0, 0, 0), Color3.fromRGB(50, 100, 220), function()
         local json = HttpService:JSONEncode(Nexus.Data.Logs)
         setclipboard(json)
-        print("Nexus-Hub: Dados exportados!")
     end)
 
     -- Dragging
@@ -100,10 +105,12 @@ function UI.init(Nexus)
 end
 
 function UI.addLog(Nexus, Decryption, remote, method, args, extra)
+    if not UI.LogContainer then return end
+    
     local timestamp = os.date("%H:%M:%S")
     
     local logFrame = Instance.new("Frame", UI.LogContainer)
-    logFrame.Size = UDim2.new(1, 0, 0, 85)
+    logFrame.Size = UDim2.new(1, -10, 0, 90)
     logFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
     logFrame.BorderSizePixel = 0
     Instance.new("UICorner", logFrame)
@@ -120,7 +127,7 @@ function UI.addLog(Nexus, Decryption, remote, method, args, extra)
     title.RichText = true
     
     local content = Instance.new("TextLabel", logFrame)
-    content.Size = UDim2.new(1, -20, 0, 55)
+    content.Size = UDim2.new(1, -20, 0, 60)
     content.Position = UDim2.new(0, 10, 0, 25)
     content.BackgroundTransparency = 1
     content.TextColor3 = Color3.new(0.85, 0.85, 0.85)
@@ -143,13 +150,14 @@ function UI.addLog(Nexus, Decryption, remote, method, args, extra)
         end
     end
     
-    -- Adiciona upvalues se encontrados
     local upStr = ""
     local upCount = 0
-    for k, v in pairs(extra.Upvalues) do
-        upCount = upCount + 1
-        if upCount > 3 then break end
-        upStr = upStr .. string.format("%s=%s ", tostring(k), Decryption.safeString(v))
+    if extra.Upvalues then
+        for k, v in pairs(extra.Upvalues) do
+            upCount = upCount + 1
+            if upCount > 3 then break end
+            upStr = upStr .. string.format("%s=%s ", tostring(k), Decryption.safeString(v))
+        end
     end
     
     if upCount > 0 then
@@ -158,9 +166,8 @@ function UI.addLog(Nexus, Decryption, remote, method, args, extra)
     
     content.Text = argStr
     
-    UI.LogContainer.CanvasSize = UDim2.new(0, 0, 0, #UI.LogContainer:GetChildren() * 93)
     if Nexus.Settings.AutoScroll then
-        UI.LogContainer.CanvasPosition = Vector2.new(0, UI.LogContainer.CanvasSize.Y.Offset)
+        UI.LogContainer.CanvasPosition = Vector2.new(0, 999999)
     end
     
     table.insert(Nexus.Data.Logs, {Time = timestamp, Remote = remote.Name, Method = method, Args = args, Extra = extra})

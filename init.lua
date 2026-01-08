@@ -1,6 +1,5 @@
 --[[
-    NEXUS-HUB v7.0 APEX | LOADER
-    "Modular Intelligence System"
+    NEXUS-HUB v7.0 APEX | LOADER (FIXED)
 ]]
 
 local baseUrl = "https://raw.githubusercontent.com/dragonhuboficial/Nexus-Hub/main/src/modules/"
@@ -23,9 +22,13 @@ local UI = loadModule("UI")
 local Core = loadModule("Core")
 
 if Config and Decryption and UI and Core then
+    -- Compartilha a tabela Config globalmente para os módulos acessarem o mesmo estado
+    _G.NexusConfig = Config
+    
     UI.init(Config)
     Core.hook(Config, UI, Decryption)
-    print("Nexus-Hub v7.0 Apex carregado com sucesso!")
+    
+    print("Nexus-Hub v7.0 Apex: Sistema inicializado e pronto!")
 else
     error("Nexus-Hub: Erro crítico ao carregar módulos.")
 end
