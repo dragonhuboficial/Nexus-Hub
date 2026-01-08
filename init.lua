@@ -1,9 +1,9 @@
 --[[
-    NEXUS TOTAL CAPTURE SYSTEM v8.0
-    Interface Original Restaurada + Inteligência Phantom
+    NEXUS TOTAL CAPTURE SYSTEM v8.1
+    Limpeza Forçada + Interface Profissional + Cópia Geral
 ]]
 
-task.wait(1)
+task.wait(0.5)
 
 local Players = game:GetService("Players")
 local UserInputService = game:GetService("UserInputService")
@@ -11,17 +11,27 @@ local HttpService = game:GetService("HttpService")
 local player = Players.LocalPlayer
 local PlayerGui = player:WaitForChild("PlayerGui")
 
-if PlayerGui:FindFirstChild("NexusUI") then
-	PlayerGui.NexusUI:Destroy()
+-- [ LIMPEZA AGRESSIVA ]
+local function cleanup()
+    for _, v in pairs(PlayerGui:GetChildren()) do
+        if v.Name:find("Nexus") or v.Name:find("Hub") then
+            v:Destroy()
+        end
+    end
+    if game:GetService("CoreGui"):FindFirstChild("NexusUI") then
+        game:GetService("CoreGui").NexusUI:Destroy()
+    end
 end
+cleanup()
 
--- [ ESTADO E MÓDULOS ]
 local Nexus = {
     Active = false,
     Queue = {},
-    ProcessedKeys = {}
+    ProcessedKeys = {},
+    AllLogs = "" -- Armazena todos os logs para o COPY geral
 }
 
+-- [ MOTOR DE DESCRIPTOGRAFIA ]
 local Decryption = {}
 function Decryption.safeString(v)
     local t = typeof(v)
@@ -44,7 +54,7 @@ end
 
 -- [ INTERFACE ]
 local gui = Instance.new("ScreenGui", PlayerGui)
-gui.Name = "NexusUI"
+gui.Name = "NexusUI_v81"
 gui.ResetOnSpawn = false
 
 local main = Instance.new("Frame", gui)
@@ -64,7 +74,7 @@ local title = Instance.new("TextLabel", header)
 title.Size = UDim2.new(1,-200,1,0)
 title.Position = UDim2.new(0,16,0,0)
 title.BackgroundTransparency = 1
-title.Text = "NEXUS • TOTAL CAPTURE SYSTEM"
+title.Text = "NEXUS • TOTAL CAPTURE SYSTEM v8.1"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 14
 title.TextColor3 = Color3.fromRGB(230,230,255)
@@ -86,7 +96,16 @@ end
 
 local btnPause = topButton("PAUSE", -260)
 local btnClear = topButton("CLEAR", -170)
-local btnCopy  = topButton("COPY",  -80)
+local btnCopyAll = topButton("COPY ALL", -80)
+
+btnClose = Instance.new("TextButton", header)
+btnClose.Size = UDim2.new(0, 30, 0, 26)
+btnClose.Position = UDim2.new(1, -35, 0.5, -13)
+btnClose.Text = "X"
+btnClose.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
+btnClose.TextColor3 = Color3.new(1, 1, 1)
+Instance.new("UICorner", btnClose).CornerRadius = UDim.new(0, 8)
+btnClose.MouseButton1Click:Connect(function() gui:Destroy() end)
 
 local sidebar = Instance.new("Frame", main)
 sidebar.Size = UDim2.new(0,150,1,-44)
@@ -113,7 +132,6 @@ sideButton("REMOTES", 52)
 sideButton("OBJECTS", 92)
 sideButton("MODULES", 132)
 sideButton("FOLDERS", 172)
-sideButton("EXPORT", 212)
 
 local content = Instance.new("Frame", main)
 content.Size = UDim2.new(1,-150,1,-100)
@@ -146,7 +164,6 @@ start.Font = Enum.Font.GothamBold
 start.TextSize = 13
 start.TextColor3 = Color3.new(1,1,1)
 start.BackgroundColor3 = Color3.fromRGB(0,170,130)
-start.BorderSizePixel = 0
 Instance.new("UICorner", start).CornerRadius = UDim.new(0,12)
 
 start.MouseButton1Click:Connect(function()
@@ -157,6 +174,14 @@ end)
 
 btnClear.MouseButton1Click:Connect(function()
     for _, v in pairs(scroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+    Nexus.AllLogs = ""
+end)
+
+btnCopyAll.MouseButton1Click:Connect(function()
+    setclipboard(Nexus.AllLogs)
+    btnCopyAll.Text = "COPIED!"
+    task.wait(1)
+    btnCopyAll.Text = "COPY ALL"
 end)
 
 -- [ FUNÇÃO DE LOG ]
@@ -196,6 +221,7 @@ local function addLog(titleText, contentText)
         copyBtn.Text = "COPY"
     end)
     
+    Nexus.AllLogs = Nexus.AllLogs .. titleText .. " | " .. contentText .. "\n"
     scroll.CanvasPosition = Vector2.new(0, 999999)
 end
 
@@ -251,4 +277,4 @@ mt.__namecall = newcclosure(function(self, ...)
 end)
 
 setreadonly(mt, true)
-addLog("SYSTEM", "Nexus Core v8.0 Professional UI Restored")
+addLog("SYSTEM", "Nexus Core v8.1 Professional UI Restored")
