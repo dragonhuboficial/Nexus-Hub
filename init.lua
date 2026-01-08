@@ -1,6 +1,6 @@
 --[[
-    NEXUS CORE v7.7 | ADAPTIVE INTELLIGENCE
-    "Strategy, Intelligence, Stealth."
+    NEXUS CORE v7.8 | ORIGINAL POWER
+    Interface Original + Inteligência Phantom
 ]]
 
 task.wait(1)
@@ -15,16 +15,13 @@ if PlayerGui:FindFirstChild("NexusUI") then
 	PlayerGui.NexusUI:Destroy()
 end
 
--- [ ESTADO GLOBAL ]
+-- [ ESTADO E MÓDULOS ]
 local Nexus = {
     Active = false,
-    StealthMode = false,
     Queue = {},
-    ProcessedKeys = {},
-    AntiCheatDetected = false
+    ProcessedKeys = {}
 }
 
--- [ MOTOR DE DESCRIPTOGRAFIA INTELIGENTE ]
 local Decryption = {}
 function Decryption.safeString(v)
     local t = typeof(v)
@@ -38,155 +35,181 @@ end
 
 function Decryption.smartDecrypt(str)
     if type(str) ~= "string" or #str < 3 then return str, nil end
-    
-    -- Tenta Base64
     local s, b = pcall(HttpService.Base64Decode, HttpService, str)
     if s and #b > 2 then return b, "B64" end
-    
-    -- Tenta Reverse (apenas se parecer encriptado)
-    if not str:match(" ") and #str > 6 then
-        local rev = string.reverse(str)
-        if rev:match("^[%w%s%p]+$") then return rev, "REV" end
-    end
-    
-    -- Tenta XOR 1-Byte (Brute Force Inteligente)
-    if #str > 5 and not str:match(" ") then
-        for i = 1, 255 do
-            local res = ""
-            for j = 1, #str do res = res .. string.char(bit.bxor(str:byte(j), i)) end
-            if res:match("^[%w%s%p]+$") and #res > 5 and res:match("[aeiou]") then
-                return res, "XOR"
-            end
-        end
-    end
-    
+    local rev = string.reverse(str)
+    if #rev > 6 and not str:match(" ") and rev:match("^[%w%s%p]+$") then return rev, "REV" end
     return str, nil
 end
 
--- [ INTERFACE ]
+-- [ INTERFACE ORIGINAL ]
 local gui = Instance.new("ScreenGui", PlayerGui)
 gui.Name = "NexusUI"
 gui.ResetOnSpawn = false
 
 local main = Instance.new("Frame", gui)
-main.Size = UDim2.new(0, 500, 0, 350)
-main.Position = UDim2.new(0.5, -250, 0.5, -175)
-main.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+main.Size = UDim2.new(0, 720, 0, 420)
+main.Position = UDim2.new(0.5, -360, 0.5, -210)
+main.BackgroundColor3 = Color3.fromRGB(18,18,26)
 main.BorderSizePixel = 0
-Instance.new("UICorner", main)
+Instance.new("UICorner", main).CornerRadius = UDim.new(0,16)
 
 local header = Instance.new("Frame", main)
-header.Size = UDim2.new(1, 0, 0, 40)
-header.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+header.Size = UDim2.new(1,0,0,44)
+header.BackgroundColor3 = Color3.fromRGB(30,30,48)
 header.BorderSizePixel = 0
-Instance.new("UICorner", header)
+Instance.new("UICorner", header).CornerRadius = UDim.new(0,16)
 
 local title = Instance.new("TextLabel", header)
-title.Size = UDim2.new(1, 0, 1, 0)
+title.Size = UDim2.new(1,-200,1,0)
+title.Position = UDim2.new(0,16,0,0)
 title.BackgroundTransparency = 1
-title.Text = "NEXUS CORE v7.7 | ADAPTIVE"
-title.TextColor3 = Color3.fromRGB(0, 170, 255)
+title.Text = "NEXUS • TOTAL CAPTURE SYSTEM v7.8"
 title.Font = Enum.Font.GothamBold
 title.TextSize = 14
+title.TextColor3 = Color3.fromRGB(230,230,255)
+title.TextXAlignment = Enum.TextXAlignment.Left
 
-local close = Instance.new("TextButton", header)
-close.Size = UDim2.new(0, 30, 0, 30)
-close.Position = UDim2.new(1, -35, 0, 5)
-close.Text = "X"
-close.BackgroundColor3 = Color3.fromRGB(150, 50, 50)
-close.TextColor3 = Color3.new(1, 1, 1)
-Instance.new("UICorner", close)
-close.MouseButton1Click:Connect(function() gui:Destroy() end)
+local function topButton(txt, x, color)
+	local b = Instance.new("TextButton", header)
+	b.Size = UDim2.new(0,80,0,26)
+	b.Position = UDim2.new(1, x, 0.5, -13)
+	b.Text = txt
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 11
+	b.TextColor3 = Color3.new(1,1,1)
+	b.BackgroundColor3 = color or Color3.fromRGB(60,60,90)
+	b.BorderSizePixel = 0
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,8)
+	return b
+end
 
-local scroll = Instance.new("ScrollingFrame", main)
-scroll.Size = UDim2.new(0.94, 0, 0.65, 0)
-scroll.Position = UDim2.new(0.03, 0, 0.15, 0)
-scroll.BackgroundTransparency = 1
-scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+local btnClose = topButton("CLOSE", -80, Color3.fromRGB(150, 50, 50))
+local btnClear = topButton("CLEAR", -170)
+
+btnClose.MouseButton1Click:Connect(function() gui:Destroy() end)
+
+local sidebar = Instance.new("Frame", main)
+sidebar.Size = UDim2.new(0,150,1,-44)
+sidebar.Position = UDim2.new(0,0,0,44)
+sidebar.BackgroundColor3 = Color3.fromRGB(22,22,36)
+sidebar.BorderSizePixel = 0
+
+local function sideButton(txt, y)
+	local b = Instance.new("TextButton", sidebar)
+	b.Size = UDim2.new(1,-16,0,34)
+	b.Position = UDim2.new(0,8,0,y)
+	b.Text = txt
+	b.Font = Enum.Font.GothamBold
+	b.TextSize = 12
+	b.TextColor3 = Color3.fromRGB(220,220,240)
+	b.BackgroundColor3 = Color3.fromRGB(40,40,60)
+	b.BorderSizePixel = 0
+	Instance.new("UICorner", b).CornerRadius = UDim.new(0,10)
+	return b
+end
+
+sideButton("ALL", 12)
+sideButton("REMOTES", 52)
+sideButton("OBJECTS", 92)
+sideButton("MODULES", 132)
+sideButton("FOLDERS", 172)
+
+local content = Instance.new("Frame", main)
+content.Size = UDim2.new(1,-150,1,-100)
+content.Position = UDim2.new(0,150,0,44)
+content.BackgroundColor3 = Color3.fromRGB(14,14,22)
+content.BorderSizePixel = 0
+
+local scroll = Instance.new("ScrollingFrame", content)
+scroll.Size = UDim2.new(1,-10,1,-10)
+scroll.Position = UDim2.new(0,5,0,5)
+scroll.CanvasSize = UDim2.new(0,0,0,0)
 scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
-scroll.ScrollBarThickness = 2
-Instance.new("UIListLayout", scroll).Padding = UDim.new(0, 5)
+scroll.ScrollBarImageTransparency = 0.6
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+local layout = Instance.new("UIListLayout", scroll)
+layout.Padding = UDim.new(0,6)
 
-local start = Instance.new("TextButton", main)
-start.Size = UDim2.new(0, 200, 0, 40)
-start.Position = UDim2.new(0.5, -100, 0.9, -20)
-start.Text = "INITIALIZE PHANTOM"
-start.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
-start.TextColor3 = Color3.new(1, 1, 1)
+local bottom = Instance.new("Frame", main)
+bottom.Size = UDim2.new(1,0,0,56)
+bottom.Position = UDim2.new(0,0,1,-56)
+bottom.BackgroundColor3 = Color3.fromRGB(26,26,40)
+bottom.BorderSizePixel = 0
+
+local start = Instance.new("TextButton", bottom)
+start.Size = UDim2.new(0,220,0,36)
+start.Position = UDim2.new(0.5,-110,0.5,-18)
+start.Text = "START CAPTURE"
 start.Font = Enum.Font.GothamBold
-Instance.new("UICorner", start)
+start.TextSize = 13
+start.TextColor3 = Color3.new(1,1,1)
+start.BackgroundColor3 = Color3.fromRGB(0,170,130)
+Instance.new("UICorner", start).CornerRadius = UDim.new(0,12)
 
--- [ LOGICA DE FILA (ANTI-LAG) ]
-local function processQueue()
+start.MouseButton1Click:Connect(function()
+	Nexus.Active = not Nexus.Active
+	start.Text = Nexus.Active and "STOP CAPTURE" or "START CAPTURE"
+	start.BackgroundColor3 = Nexus.Active and Color3.fromRGB(200,70,70) or Color3.fromRGB(0,170,130)
+end)
+
+btnClear.MouseButton1Click:Connect(function()
+    for _, v in pairs(scroll:GetChildren()) do if v:IsA("Frame") then v:Destroy() end end
+end)
+
+-- [ FUNÇÃO DE LOG COM BOTÃO DE CÓPIA ]
+local function addLog(titleText, contentText)
+    local logFrame = Instance.new("Frame", scroll)
+    logFrame.Size = UDim2.new(1, -10, 0, 45)
+    logFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 46)
+    Instance.new("UICorner", logFrame).CornerRadius = UDim.new(0, 8)
+    
+    local box = Instance.new("TextBox", logFrame)
+    box.Size = UDim2.new(1, -80, 1, 0)
+    box.Position = UDim2.new(0, 10, 0, 0)
+    box.BackgroundTransparency = 1
+    box.Text = "<b>" .. titleText .. "</b> | " .. contentText
+    box.TextColor3 = Color3.fromRGB(210, 210, 235)
+    box.Font = Enum.Font.Code
+    box.TextSize = 10
+    box.TextXAlignment = Enum.TextXAlignment.Left
+    box.ReadOnly = true
+    box.ClearTextOnFocus = false
+    box.RichText = true
+
+    local copyBtn = Instance.new("TextButton", logFrame)
+    copyBtn.Size = UDim2.new(0, 60, 0, 25)
+    copyBtn.Position = UDim2.new(1, -65, 0.5, -12)
+    copyBtn.Text = "COPY"
+    copyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+    copyBtn.TextColor3 = Color3.new(1, 1, 1)
+    copyBtn.Font = Enum.Font.GothamBold
+    copyBtn.TextSize = 9
+    Instance.new("UICorner", copyBtn)
+    
+    copyBtn.MouseButton1Click:Connect(function()
+        setclipboard(contentText)
+        copyBtn.Text = "OK!"
+        task.wait(1)
+        copyBtn.Text = "COPY"
+    end)
+    
+    scroll.CanvasPosition = Vector2.new(0, 999999)
+end
+
+-- [ FILA ANTI-LAG ]
+task.spawn(function()
     while true do
         if #Nexus.Queue > 0 then
             local data = table.remove(Nexus.Queue, 1)
-            local log = Instance.new("TextBox", scroll)
-            log.Size = UDim2.new(1, -10, 0, 40)
-            log.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-            log.Text = " [" .. data.Type .. "] " .. data.Name .. " | " .. data.Content
-            log.TextColor3 = Color3.new(1, 1, 1)
-            log.Font = Enum.Font.Code
-            log.TextSize = 10
-            log.ReadOnly = true
-            log.ClearTextOnFocus = false
-            log.TextXAlignment = Enum.TextXAlignment.Left
-            Instance.new("UICorner", log)
-            
-            if #scroll:GetChildren() > 50 then scroll:GetChildren()[2]:Destroy() end -- Limita logs na tela
-            scroll.CanvasPosition = Vector2.new(0, 99999)
+            addLog(data.Name, data.Content)
         end
-        task.wait(0.1) -- Processa 10 por segundo para não travar
-    end
-end
-task.spawn(processQueue)
-
--- [ RECONHECIMENTO E CAPTURA ]
-start.MouseButton1Click:Connect(function()
-    Nexus.Active = not Nexus.Active
-    start.Text = Nexus.Active and "PHANTOM ACTIVE" or "INITIALIZE PHANTOM"
-    start.BackgroundColor3 = Nexus.Active and Color3.fromRGB(200, 50, 50) or Color3.fromRGB(0, 150, 100)
-    
-    if Nexus.Active then
-        table.insert(Nexus.Queue, {Type = "SYSTEM", Name = "RECON", Content = "Analyzing Game Defenses..."})
+        task.wait(0.1)
     end
 end)
 
-local mt = getrawmetatable(game)
-local old = mt.__namecall
-setreadonly(mt, false)
-
-mt.__namecall = newcclosure(function(self, ...)
-    local method = getnamecallmethod()
-    
-    -- Anti-Kick Bypass Automático
-    if method == "Kick" and self == player then
-        table.insert(Nexus.Queue, {Type = "BYPASS", Name = "KICK", Content = "Blocked Kick Attempt!"})
-        return nil
-    end
-
-    if Nexus.Active and (method == "FireServer" or method == "InvokeServer") then
-        local args = {...}
-        local argStr = ""
-        for i, v in pairs(args) do
-            local val = Decryption.safeString(v)
-            local dec, tag = Decryption.smartDecrypt(val)
-            argStr = argStr .. "["..i.."]: " .. dec .. (tag and " ("..tag..")" or "") .. " "
-        end
-        
-        -- Filtro de Duplicatas
-        local key = self.Name .. argStr
-        if not Nexus.ProcessedKeys[key] then
-            Nexus.ProcessedKeys[key] = true
-            table.insert(Nexus.Queue, {Type = "REMOTE", Name = self.Name, Content = argStr})
-        end
-    end
-    return old(self, ...)
-end)
-
-setreadonly(mt, true)
-
--- Dragging
+-- [ DRAGGING ]
 local dragging, dragStart, startPos
 header.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
@@ -200,3 +223,34 @@ UserInputService.InputChanged:Connect(function(input)
         main.Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
     end
 end)
+
+-- [ CAPTURA INTELIGENTE ]
+local mt = getrawmetatable(game)
+local old = mt.__namecall
+setreadonly(mt, false)
+
+mt.__namecall = newcclosure(function(self, ...)
+    local method = getnamecallmethod()
+    
+    if method == "Kick" and self == player then return nil end
+
+    if Nexus.Active and (method == "FireServer" or method == "InvokeServer") then
+        local args = {...}
+        local argStr = ""
+        for i, v in pairs(args) do
+            local val = Decryption.safeString(v)
+            local dec, tag = Decryption.smartDecrypt(val)
+            argStr = argStr .. dec .. (tag and " ("..tag..")" or "") .. " "
+        end
+        
+        local key = self.Name .. argStr
+        if not Nexus.ProcessedKeys[key] then
+            Nexus.ProcessedKeys[key] = true
+            table.insert(Nexus.Queue, {Name = self.Name, Content = argStr})
+        end
+    end
+    return old(self, ...)
+end)
+
+setreadonly(mt, true)
+addLog("SYSTEM", "Nexus Core v7.8 Loaded Successfully")
